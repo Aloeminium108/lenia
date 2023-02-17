@@ -38,4 +38,20 @@ function eulerExp(x: number): Complex {
     }
 }
 
-export { Complex, complexAdd, complexDiv, complexMul, complexSub, eulerExp}
+function realToComplex(matrix: number[][]) {
+    const output: Complex[][] = []
+
+    for (let x = 0; x < matrix.length; x++) {
+        output[x] = []
+        for (let y = 0; y < matrix[x].length; y++) {
+            output[x][y] = {
+                real: matrix[x][y],
+                imag: 0
+            }
+        }
+    }
+
+    return output
+}
+
+export { Complex, complexAdd, complexDiv, complexMul, complexSub, eulerExp, realToComplex }

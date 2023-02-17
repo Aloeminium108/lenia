@@ -1,21 +1,5 @@
 import { Complex, complexAdd, complexDiv, complexMul, complexSub, eulerExp } from "./complex.js"
 
-function realToComplex(matrix: number[][]) {
-    const output: Complex[][] = []
-
-    for (let x = 0; x < matrix.length; x++) {
-        output[x] = []
-        for (let y = 0; y < matrix[x].length; y++) {
-            output[x][y] = {
-                real: matrix[x][y],
-                imag: 0
-            }
-        }
-    }
-
-    return output
-}
-
 function FFT2DConvolution(matrix: Complex[][], kernel: Complex[][]) {
     const fftMatrix = FFT2D(matrix)
     const fftKernel = FFT2D(kernel)
@@ -222,6 +206,6 @@ function _FFTRecursive(vector: Array<Complex>) {
     }
 }
 
-export { FFTConvolution }
+export { FFT2D, inverseFFT2D, FFT2DConvolution }
 
 
