@@ -1,4 +1,74 @@
 import { complexAdd, complexDiv, complexMul, complexSub, eulerExp } from "./complex.js";
+function FFT2DConvolution(matrix, kernel) {
+    const fftMatrix = FFT2D(matrix);
+    const fftKernel = FFT2D(kernel);
+    const output = new Array(matrix.length);
+    for (let x = 0; x < matrix.length; x++) {
+        output[x] = [];
+        for (let y = 0; y < matrix[x].length; y++) {
+            output[x][y] = complexMul(fftMatrix[x][y], fftKernel[x][y]);
+        }
+    }
+    return inverseFFT2D(output);
+}
+function FFT2D(matrix) {
+    let fftMatrix = [];
+    matrix.forEach(column => {
+        fftMatrix.push(FFT(column));
+    });
+    let transposeMatrix = [];
+    for (let x = 0; x < fftMatrix.length; x++) {
+        transposeMatrix[x] = [];
+    }
+    for (let x = 0; x < fftMatrix.length; x++) {
+        for (let y = 0; y < fftMatrix[x].length; y++) {
+            transposeMatrix[y][x] = fftMatrix[x][y];
+        }
+    }
+    fftMatrix = [];
+    transposeMatrix.forEach(column => {
+        fftMatrix.push(FFT(column));
+    });
+    let output = [];
+    for (let x = 0; x < fftMatrix.length; x++) {
+        output[x] = [];
+    }
+    for (let x = 0; x < fftMatrix.length; x++) {
+        for (let y = 0; y < fftMatrix[x].length; y++) {
+            output[y][x] = fftMatrix[x][y];
+        }
+    }
+    return output;
+}
+function inverseFFT2D(matrix) {
+    let transposeMatrix = [];
+    for (let x = 0; x < matrix.length; x++) {
+        transposeMatrix[x] = [];
+    }
+    for (let x = 0; x < matrix.length; x++) {
+        for (let y = 0; y < matrix[x].length; y++) {
+            transposeMatrix[y][x] = matrix[x][y];
+        }
+    }
+    let fftMatrix = [];
+    transposeMatrix.forEach(column => {
+        fftMatrix.push(inverseFFT(column));
+    });
+    transposeMatrix = [];
+    for (let x = 0; x < fftMatrix.length; x++) {
+        transposeMatrix[x] = [];
+    }
+    for (let x = 0; x < fftMatrix.length; x++) {
+        for (let y = 0; y < fftMatrix[x].length; y++) {
+            transposeMatrix[y][x] = fftMatrix[x][y];
+        }
+    }
+    let output = [];
+    transposeMatrix.forEach(column => {
+        output.push(inverseFFT(column));
+    });
+    return output;
+}
 function FFTConvolution(vector, kernel) {
     const fftKernel = FFT(kernel.reverse());
     const fftMatrix = FFT(vector);
@@ -72,4 +142,4 @@ function _FFTRecursive(vector) {
         vector[k + N / 2] = complexSub(even[k], factor);
     }
 }
-export { FFTConvolution };
+export { FFT2D, inverseFFT2D, FFT2DConvolution };

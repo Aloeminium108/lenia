@@ -1,29 +1,38 @@
 import { Complex } from "./complex.js"
+import { FrameCounter } from "./framecounter.js"
 
 class Lenia {
 
-    space: Complex[][]
+    image: ImageData
+    points: Complex[][]
+
+    frameCounter?: FrameCounter
 
     constructor(
         private size: number, 
         private stateResolution: number, 
-        private ctx: CanvasRenderingContext2D
+        private ctx: CanvasRenderingContext2D,
+        countFrames: boolean = false
     ) {
 
-        this.space = [];
+        this.image = ctx.createImageData(size, size)
+
+        this.points = [];
 
         for(let i = 0; i < size; i++) {
-            this.space[i] = [];
+            this.points[i] = [];
             for(let j = 0; j < size; j++) {
 
                 const rand = Math.floor(Math.random() * stateResolution)
 
-                this.space[i][j] = {
+                this.points[i][j] = {
                     real: rand,
                     imag: 0
                 }
             }
         }
+
+        this.frameCounter = countFrames ? new FrameCounter() : undefined
 
     }
 
@@ -31,15 +40,30 @@ class Lenia {
         for (let x = 0; x < this.size; x++) {
             for (let y = 0; y < this.size; y++) {
 
-                this.ctx.fillStyle = `rgba(0, 0, ${this.space[x][y].real}, 1)`
-                this.ctx.fillRect(x, y, 1, 1)
+                const index = (x + y * this.size) * 4
+
+                this.image.data[index + 2] = this.points[x][y].real
+                this.image.data[index + 3] = 255
 
             }
         }
+
+        this.ctx.putImageData(this.image, 0, 0)
     }
 
     update = () => {
-        
+        for(let i = 0; i < this.size; i++) {
+            this.points[i] = [];
+            for(let j = 0; j < this.size; j++) {
+
+                const rand = Math.floor(Math.random() * this.stateResolution)
+
+                this.points[i][j] = {
+                    real: rand,
+                    imag: 0
+                }
+            }
+        }
     }
 
     animate = () => {
@@ -48,6 +72,8 @@ class Lenia {
         this.update()
 
         this.draw()
+
+        this.frameCounter?.countFrame()
 
         requestAnimationFrame(this.animate)
     }

@@ -12,7 +12,7 @@ if (canvas) {
     const ctx = canvas.getContext("2d")
 
     if (ctx) {
-        const lenia = new Lenia(SPACE_SIZE, STATE_RESOLUTION, ctx)
+        const lenia = new Lenia(SPACE_SIZE, STATE_RESOLUTION, ctx, true)
         lenia.animate()
     }
 }
