@@ -1,13 +1,15 @@
-import { Complex } from "./complex.js"
-import { FFT2D } from "./fftconvolution.js"
+import { Complex, complexMul } from "./complex.js"
+import { FFT2D, inverseFFT2D } from "./fftconvolution.js"
 import { FrameCounter } from "./framecounter.js"
 
 class Lenia {
 
+    dt: number = 0.2
+
     image: ImageData
     points: Complex[][]
 
-    kernel?: Complex[][]
+    kernel: Complex[][]
     growthFunction: GrowthFunction
 
     frameCounter?: FrameCounter
@@ -40,12 +42,13 @@ class Lenia {
         }
 
         this.growthFunction = new GrowthFunction(stateResolution)
-        this.growthFunction.addBell(this.stateResolution, 64, 64)
-        this.growthFunction.addBell(this.stateResolution / 2, 128, 64)
+        this.growthFunction.addBell(this.stateResolution * 1.3, 48, 16, -this.stateResolution)
+        //this.growthFunction.addBell(this.stateResolution / 2, 32, 16, 0)
 
         let kernelSkeleton = new GrowthFunction(stateResolution)
-        kernelSkeleton.addBell(this.stateResolution, 16, 16)
-        this.generateKernel(kernelSkeleton, 32)
+        kernelSkeleton.addBell(0.003, 16, 1, 0)
+        kernelSkeleton.addBell(0.007, 1, 1, 0)
+        this.kernel = this.generateKernel(kernelSkeleton, 128)
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
@@ -67,7 +70,16 @@ class Lenia {
     }
 
     update = () => {
-        this.growthFunction.applyToMatrix(this.points)
+        const convolution = this.convolve()
+        this.growthFunction.applyToMatrix(convolution)
+        for (let x = 0; x < this.size; x++) {
+            for (let y = 0; y < this.size; y++) {
+                this.points[x][y] = {
+                    real: Math.min(Math.max(this.points[x][y].real + convolution[x][y].real * this.dt, 0), this.stateResolution - 1),
+                    imag: 0
+                }
+            }
+        }
     }
 
     animate = () => {
@@ -132,8 +144,20 @@ class Lenia {
             }
         }
 
-        FFT2D(points)
+        return FFT2D(points)
 
+    }
+
+    convolve = () => {
+        const frequencyMatrix = FFT2D(this.points)
+
+        for (let x = 0; x < this.size; x++) {
+            for (let y = 0; y < this.size; y++) {
+                frequencyMatrix[x][y] = complexMul(frequencyMatrix[x][y], this.kernel[x][y])
+            }
+        }
+
+        return inverseFFT2D(frequencyMatrix)
     }
 
 }
@@ -144,11 +168,12 @@ class GrowthFunction {
 
     constructor(private stateResolution: number, bells: Bell[] = []) {}
 
-    addBell = (a: number, b: number, c: number) => {
+    addBell = (a: number, b: number, c: number, h: number) => {
         this.bells.push({
             a: a,
             b: b,
-            c2: 2 * c ** 2
+            c2: 2 * c ** 2,
+            h: h
         })
     }
 
@@ -156,19 +181,15 @@ class GrowthFunction {
         let sum = 0
 
         this.bells.forEach(bell => {
-            sum += bell.a * Math.E ** -((value - bell.b) ** 2 / (bell.c2))
+            sum += (bell.a * Math.E ** (-((value - bell.b) ** 2) / bell.c2)) + bell.h
         })
-
-        sum -= this.stateResolution
 
         return Math.min(Math.max(sum, -this.stateResolution), this.stateResolution)
     }
 
     // Slightly faster application function for just one bell
     applyFirstBell = (value: number) => {
-        let result = this.bells[0].a * Math.E ** -((value - this.bells[0].b) ** 2 / (this.bells[0].c2))
-
-        result -= this.stateResolution
+        let result = (this.bells[0].a * Math.E ** -((value - this.bells[0].b) ** 2 / (this.bells[0].c2))) + this.bells[0].h
 
         return Math.min(Math.max(result, -this.stateResolution), this.stateResolution)
     }
@@ -196,7 +217,8 @@ interface Bell {
     b: number,
     // To avoid redundant calculations, 2 * c ** 2 
     // should be stored ahead of time.
-    c2: number
+    c2: number,
+    h: number
 }
 
 export { Lenia }

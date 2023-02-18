@@ -1,4 +1,5 @@
-import { FFT2D } from "./fftconvolution.js";
+import { complexMul } from "./complex.js";
+import { FFT2D, inverseFFT2D } from "./fftconvolution.js";
 import { FrameCounter } from "./framecounter.js";
 class Lenia {
     constructor(size, 
@@ -9,6 +10,7 @@ class Lenia {
         this.size = size;
         this.stateResolution = stateResolution;
         this.ctx = ctx;
+        this.dt = 0.2;
         this.draw = () => {
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
@@ -20,7 +22,16 @@ class Lenia {
             this.ctx.putImageData(this.image, 0, 0);
         };
         this.update = () => {
-            this.growthFunction.applyToMatrix(this.points);
+            const convolution = this.convolve();
+            this.growthFunction.applyToMatrix(convolution);
+            for (let x = 0; x < this.size; x++) {
+                for (let y = 0; y < this.size; y++) {
+                    this.points[x][y] = {
+                        real: Math.min(Math.max(this.points[x][y].real + convolution[x][y].real * this.dt, 0), this.stateResolution - 1),
+                        imag: 0
+                    };
+                }
+            }
         };
         this.animate = () => {
             var _a;
@@ -69,7 +80,16 @@ class Lenia {
                     };
                 }
             }
-            FFT2D(points);
+            return FFT2D(points);
+        };
+        this.convolve = () => {
+            const frequencyMatrix = FFT2D(this.points);
+            for (let x = 0; x < this.size; x++) {
+                for (let y = 0; y < this.size; y++) {
+                    frequencyMatrix[x][y] = complexMul(frequencyMatrix[x][y], this.kernel[x][y]);
+                }
+            }
+            return inverseFFT2D(frequencyMatrix);
         };
         this.image = ctx.createImageData(size, size);
         this.points = [];
@@ -84,11 +104,12 @@ class Lenia {
             }
         }
         this.growthFunction = new GrowthFunction(stateResolution);
-        this.growthFunction.addBell(this.stateResolution, 64, 64);
-        this.growthFunction.addBell(this.stateResolution / 2, 128, 64);
+        this.growthFunction.addBell(this.stateResolution * 1.3, 48, 16, -this.stateResolution);
+        //this.growthFunction.addBell(this.stateResolution / 2, 32, 16, 0)
         let kernelSkeleton = new GrowthFunction(stateResolution);
-        kernelSkeleton.addBell(this.stateResolution, 16, 16);
-        this.generateKernel(kernelSkeleton, 32);
+        kernelSkeleton.addBell(0.003, 16, 1, 0);
+        kernelSkeleton.addBell(0.007, 1, 1, 0);
+        this.kernel = this.generateKernel(kernelSkeleton, 128);
         this.frameCounter = countFrames ? new FrameCounter() : undefined;
     }
 }
@@ -96,25 +117,24 @@ class GrowthFunction {
     constructor(stateResolution, bells = []) {
         this.stateResolution = stateResolution;
         this.bells = [];
-        this.addBell = (a, b, c) => {
+        this.addBell = (a, b, c, h) => {
             this.bells.push({
                 a: a,
                 b: b,
-                c2: 2 * Math.pow(c, 2)
+                c2: 2 * Math.pow(c, 2),
+                h: h
             });
         };
         this.apply = (value) => {
             let sum = 0;
             this.bells.forEach(bell => {
-                sum += bell.a * Math.pow(Math.E, -(Math.pow((value - bell.b), 2) / (bell.c2)));
+                sum += (bell.a * Math.pow(Math.E, (-(Math.pow((value - bell.b), 2)) / bell.c2))) + bell.h;
             });
-            sum -= this.stateResolution;
             return Math.min(Math.max(sum, -this.stateResolution), this.stateResolution);
         };
         // Slightly faster application function for just one bell
         this.applyFirstBell = (value) => {
-            let result = this.bells[0].a * Math.pow(Math.E, -(Math.pow((value - this.bells[0].b), 2) / (this.bells[0].c2)));
-            result -= this.stateResolution;
+            let result = (this.bells[0].a * Math.pow(Math.E, -(Math.pow((value - this.bells[0].b), 2) / (this.bells[0].c2)))) + this.bells[0].h;
             return Math.min(Math.max(result, -this.stateResolution), this.stateResolution);
         };
         this.applyToMatrix = (matrix) => {
