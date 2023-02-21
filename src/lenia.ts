@@ -4,12 +4,12 @@ import { FrameCounter } from "./framecounter.js"
 
 class Lenia {
 
-    dt: number = 0.2
+    dt: number = 0.1
 
     image: ImageData
-    points: Complex[][]
+    points: number[][]
 
-    kernel: Complex[][]
+    kernel: number[][]
     growthFunction: GrowthFunction
 
     frameCounter?: FrameCounter
@@ -31,24 +31,20 @@ class Lenia {
         for(let i = 0; i < size; i++) {
             this.points[i] = [];
             for(let j = 0; j < size; j++) {
-
                 const rand = Math.floor(Math.random() * stateResolution)
-
-                this.points[i][j] = {
-                    real: rand,
-                    imag: 0
-                }
+                this.points[i][j] = rand
             }
         }
 
-        this.growthFunction = new GrowthFunction(stateResolution)
-        this.growthFunction.addBell(this.stateResolution * 1.3, 48, 16, -this.stateResolution)
-        //this.growthFunction.addBell(this.stateResolution / 2, 32, 16, 0)
+        this.growthFunction = new GrowthFunction(this.stateResolution * 2, 18, 1.4, -this.stateResolution, this.stateResolution)
 
-        let kernelSkeleton = new GrowthFunction(stateResolution)
-        kernelSkeleton.addBell(0.003, 16, 1, 0)
-        kernelSkeleton.addBell(0.007, 1, 1, 0)
-        this.kernel = this.generateKernel(kernelSkeleton, 128)
+        this.kernel = generateKernel([
+                new GrowthFunction(0.1, 0, 2, 0, this.stateResolution),
+                new GrowthFunction(0.4, 7, 3, 0, this.stateResolution),
+                new GrowthFunction(0.2, 14, 2, 0, this.stateResolution)
+            ],
+            20
+        )
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
@@ -60,7 +56,7 @@ class Lenia {
 
                 const index = (x + y * this.size) * 4
 
-                this.image.data[index + 2] = this.points[x][y].real
+                this.image.data[index + 2] = this.points[x][y]
                 this.image.data[index + 3] = 255
 
             }
@@ -70,14 +66,18 @@ class Lenia {
     }
 
     update = () => {
-        const convolution = this.convolve()
+
+        const convolution = convolve(this.points, this.kernel)
+
+        console.log(convolution[64][64])
+
         this.growthFunction.applyToMatrix(convolution)
+
+        console.log(convolution[64][64])
+
         for (let x = 0; x < this.size; x++) {
             for (let y = 0; y < this.size; y++) {
-                this.points[x][y] = {
-                    real: Math.min(Math.max(this.points[x][y].real + convolution[x][y].real * this.dt, 0), this.stateResolution - 1),
-                    imag: 0
-                }
+                this.points[x][y] = Math.min(Math.max(this.points[x][y] + convolution[x][y] * this.dt, 0), this.stateResolution - 1)
             }
         }
     }
@@ -101,124 +101,104 @@ class Lenia {
 
                 const rand = Math.floor(Math.random() * this.stateResolution)
 
-                this.points[i][j] = {
-                    real: rand,
-                    imag: 0
-                }
+                this.points[i][j] = rand
             }
         }
-    }
-
-    // Generates Fourier transform of kernel from a growth function
-    generateKernel = (growthFunction: GrowthFunction, radius: number) => {
-
-        const points: Complex[][] = [];
-
-        for(let x = 0; x < radius * 2; x++) {
-            points[x] = [];
-            for(let y = 0; y < radius * 2; y++) {
-
-                const dx = x - radius
-                const dy = y - radius
-
-                const distance = Math.sqrt(dx ** 2 + dy ** 2)
-
-                points[x][y] = {
-                    real: growthFunction.apply(distance),
-                    imag: 0
-                }
-            }
-
-            for (let i = 0; i < this.size - radius * 2; i++) {
-                points[x].push({real: 0, imag: 0})
-            }
-        }
-
-        for (let x = radius * 2; x < this.size; x++) {
-            points[x] = []
-            for (let y = 0; y < this.size; y++) {
-                points[x][y] = {
-                    real: 0,
-                    imag:0
-                }
-            }
-        }
-
-        return FFT2D(points)
-
-    }
-
-    convolve = () => {
-        const frequencyMatrix = FFT2D(this.points)
-
-        for (let x = 0; x < this.size; x++) {
-            for (let y = 0; y < this.size; y++) {
-                frequencyMatrix[x][y] = complexMul(frequencyMatrix[x][y], this.kernel[x][y])
-            }
-        }
-
-        return inverseFFT2D(frequencyMatrix)
     }
 
 }
+
+
+function convolve(matrix: number[][], kernel: number[][]) {
+
+    const convolution: number[][] = []
+
+    for (let x1 = 0; x1 < matrix.length; x1++) {
+        convolution[x1] = []
+        for (let y1 = 0; y1 < matrix[x1].length; y1++) {
+
+            let sum = 0
+
+            for (let i = 0; i < kernel.length; i++) {
+                for (let j = 0; j < kernel[i].length; j++) {
+                    
+                    let x = x1 - (i - Math.floor(kernel.length / 2))  
+                    x = (x + matrix.length) % matrix.length
+
+                    let y = y1 - (j - Math.floor(kernel[i].length / 2))  
+                    y = (y + matrix[x1].length) % matrix[x1].length
+
+                    sum += kernel[i][j] * matrix[x][y] / (kernel.length ** 2)
+
+                }
+            }
+
+            convolution[x1][y1] = sum
+            
+        }
+    }
+
+    return convolution
+}
+
+function generateKernel(growthFunctions: GrowthFunction[], radius: number) {
+
+    const points: number[][] = [];
+
+    for(let x = 0; x < radius * 2 + 1; x++) {
+        points[x] = [];
+        for(let y = 0; y < radius * 2 + 1; y++) {
+
+            const dx = x - radius
+            const dy = y - radius
+
+            const distance = Math.sqrt(dx ** 2 + dy ** 2)
+
+            let sum = 0
+
+            growthFunctions.forEach(func => {
+                sum += func.apply(distance)
+            })
+
+            points[x][y] = sum
+        }
+    }
+
+    return points
+
+}
+
 
 class GrowthFunction {
 
-    bells: Bell[] = []
+    c2: number
 
-    constructor(private stateResolution: number, bells: Bell[] = []) {}
-
-    addBell = (a: number, b: number, c: number, h: number) => {
-        this.bells.push({
-            a: a,
-            b: b,
-            c2: 2 * c ** 2,
-            h: h
-        })
+    constructor(
+        public a: number, 
+        public b: number,
+        public c: number,
+        public h: number,
+        public max: number,
+        public min = -max
+    ) {
+        this.c2 = 2 * c ** 2
     }
+
 
     apply = (value: number) => {
-        let sum = 0
+        let result = (this.a * Math.E ** (-((value - this.b) ** 2) / this.c2)) + this.h
 
-        this.bells.forEach(bell => {
-            sum += (bell.a * Math.E ** (-((value - bell.b) ** 2) / bell.c2)) + bell.h
-        })
-
-        return Math.min(Math.max(sum, -this.stateResolution), this.stateResolution)
+        return Math.min(Math.max(result, this.min), this.max)
     }
 
-    // Slightly faster application function for just one bell
-    applyFirstBell = (value: number) => {
-        let result = (this.bells[0].a * Math.E ** -((value - this.bells[0].b) ** 2 / (this.bells[0].c2))) + this.bells[0].h
-
-        return Math.min(Math.max(result, -this.stateResolution), this.stateResolution)
-    }
-
-    applyToMatrix = (matrix: Complex[][]) => {
+    applyToMatrix = (matrix: number[][]) => {
         for (let x = 0; x < matrix.length; x++) {
             for (let y = 0; y < matrix[x].length; y++) {
-                matrix[x][y].real = this.apply(matrix[x][y].real)
+                matrix[x][y] = this.apply(matrix[x][y])
             }
         }
     }
 
-    applyFirstBellToMatrix = (matrix: Complex[][]) => {
-        for (let x = 0; x < matrix.length; x++) {
-            for (let y = 0; y < matrix[x].length; y++) {
-                matrix[x][y].real = this.applyFirstBell(matrix[x][y].real)
-            }
-        }
-    }
-
-}
-
-interface Bell {
-    a: number,
-    b: number,
-    // To avoid redundant calculations, 2 * c ** 2 
-    // should be stored ahead of time.
-    c2: number,
-    h: number
 }
 
 export { Lenia }

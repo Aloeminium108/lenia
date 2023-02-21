@@ -1,5 +1,3 @@
-import { complexMul } from "./complex.js";
-import { FFT2D, inverseFFT2D } from "./fftconvolution.js";
 import { FrameCounter } from "./framecounter.js";
 class Lenia {
     constructor(size, 
@@ -10,26 +8,25 @@ class Lenia {
         this.size = size;
         this.stateResolution = stateResolution;
         this.ctx = ctx;
-        this.dt = 0.2;
+        this.dt = 0.1;
         this.draw = () => {
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
                     const index = (x + y * this.size) * 4;
-                    this.image.data[index + 2] = this.points[x][y].real;
+                    this.image.data[index + 2] = this.points[x][y];
                     this.image.data[index + 3] = 255;
                 }
             }
             this.ctx.putImageData(this.image, 0, 0);
         };
         this.update = () => {
-            const convolution = this.convolve();
+            const convolution = convolve(this.points, this.kernel);
+            console.log(convolution[64][64]);
             this.growthFunction.applyToMatrix(convolution);
+            console.log(convolution[64][64]);
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
-                    this.points[x][y] = {
-                        real: Math.min(Math.max(this.points[x][y].real + convolution[x][y].real * this.dt, 0), this.stateResolution - 1),
-                        imag: 0
-                    };
+                    this.points[x][y] = Math.min(Math.max(this.points[x][y] + convolution[x][y] * this.dt, 0), this.stateResolution - 1);
                 }
             }
         };
@@ -46,50 +43,9 @@ class Lenia {
                 this.points[i] = [];
                 for (let j = 0; j < this.size; j++) {
                     const rand = Math.floor(Math.random() * this.stateResolution);
-                    this.points[i][j] = {
-                        real: rand,
-                        imag: 0
-                    };
+                    this.points[i][j] = rand;
                 }
             }
-        };
-        // Generates Fourier transform of kernel from a growth function
-        this.generateKernel = (growthFunction, radius) => {
-            const points = [];
-            for (let x = 0; x < radius * 2; x++) {
-                points[x] = [];
-                for (let y = 0; y < radius * 2; y++) {
-                    const dx = x - radius;
-                    const dy = y - radius;
-                    const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-                    points[x][y] = {
-                        real: growthFunction.apply(distance),
-                        imag: 0
-                    };
-                }
-                for (let i = 0; i < this.size - radius * 2; i++) {
-                    points[x].push({ real: 0, imag: 0 });
-                }
-            }
-            for (let x = radius * 2; x < this.size; x++) {
-                points[x] = [];
-                for (let y = 0; y < this.size; y++) {
-                    points[x][y] = {
-                        real: 0,
-                        imag: 0
-                    };
-                }
-            }
-            return FFT2D(points);
-        };
-        this.convolve = () => {
-            const frequencyMatrix = FFT2D(this.points);
-            for (let x = 0; x < this.size; x++) {
-                for (let y = 0; y < this.size; y++) {
-                    frequencyMatrix[x][y] = complexMul(frequencyMatrix[x][y], this.kernel[x][y]);
-                }
-            }
-            return inverseFFT2D(frequencyMatrix);
         };
         this.image = ctx.createImageData(size, size);
         this.points = [];
@@ -97,60 +53,75 @@ class Lenia {
             this.points[i] = [];
             for (let j = 0; j < size; j++) {
                 const rand = Math.floor(Math.random() * stateResolution);
-                this.points[i][j] = {
-                    real: rand,
-                    imag: 0
-                };
+                this.points[i][j] = rand;
             }
         }
-        this.growthFunction = new GrowthFunction(stateResolution);
-        this.growthFunction.addBell(this.stateResolution * 1.3, 48, 16, -this.stateResolution);
-        //this.growthFunction.addBell(this.stateResolution / 2, 32, 16, 0)
-        let kernelSkeleton = new GrowthFunction(stateResolution);
-        kernelSkeleton.addBell(0.003, 16, 1, 0);
-        kernelSkeleton.addBell(0.007, 1, 1, 0);
-        this.kernel = this.generateKernel(kernelSkeleton, 128);
+        this.growthFunction = new GrowthFunction(this.stateResolution * 2, 18, 1.4, -this.stateResolution, this.stateResolution);
+        this.kernel = generateKernel([
+            new GrowthFunction(0.1, 0, 2, 0, this.stateResolution),
+            new GrowthFunction(0.4, 7, 3, 0, this.stateResolution),
+            new GrowthFunction(0.2, 14, 2, 0, this.stateResolution)
+        ], 20);
         this.frameCounter = countFrames ? new FrameCounter() : undefined;
     }
 }
-class GrowthFunction {
-    constructor(stateResolution, bells = []) {
-        this.stateResolution = stateResolution;
-        this.bells = [];
-        this.addBell = (a, b, c, h) => {
-            this.bells.push({
-                a: a,
-                b: b,
-                c2: 2 * Math.pow(c, 2),
-                h: h
-            });
-        };
-        this.apply = (value) => {
+function convolve(matrix, kernel) {
+    const convolution = [];
+    for (let x1 = 0; x1 < matrix.length; x1++) {
+        convolution[x1] = [];
+        for (let y1 = 0; y1 < matrix[x1].length; y1++) {
             let sum = 0;
-            this.bells.forEach(bell => {
-                sum += (bell.a * Math.pow(Math.E, (-(Math.pow((value - bell.b), 2)) / bell.c2))) + bell.h;
+            for (let i = 0; i < kernel.length; i++) {
+                for (let j = 0; j < kernel[i].length; j++) {
+                    let x = x1 - (i - Math.floor(kernel.length / 2));
+                    x = (x + matrix.length) % matrix.length;
+                    let y = y1 - (j - Math.floor(kernel[i].length / 2));
+                    y = (y + matrix[x1].length) % matrix[x1].length;
+                    sum += kernel[i][j] * matrix[x][y] / (Math.pow(kernel.length, 2));
+                }
+            }
+            convolution[x1][y1] = sum;
+        }
+    }
+    return convolution;
+}
+function generateKernel(growthFunctions, radius) {
+    const points = [];
+    for (let x = 0; x < radius * 2 + 1; x++) {
+        points[x] = [];
+        for (let y = 0; y < radius * 2 + 1; y++) {
+            const dx = x - radius;
+            const dy = y - radius;
+            const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+            let sum = 0;
+            growthFunctions.forEach(func => {
+                sum += func.apply(distance);
             });
-            return Math.min(Math.max(sum, -this.stateResolution), this.stateResolution);
-        };
-        // Slightly faster application function for just one bell
-        this.applyFirstBell = (value) => {
-            let result = (this.bells[0].a * Math.pow(Math.E, -(Math.pow((value - this.bells[0].b), 2) / (this.bells[0].c2)))) + this.bells[0].h;
-            return Math.min(Math.max(result, -this.stateResolution), this.stateResolution);
+            points[x][y] = sum;
+        }
+    }
+    return points;
+}
+class GrowthFunction {
+    constructor(a, b, c, h, max, min = -max) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        this.h = h;
+        this.max = max;
+        this.min = min;
+        this.apply = (value) => {
+            let result = (this.a * Math.pow(Math.E, (-(Math.pow((value - this.b), 2)) / this.c2))) + this.h;
+            return Math.min(Math.max(result, this.min), this.max);
         };
         this.applyToMatrix = (matrix) => {
             for (let x = 0; x < matrix.length; x++) {
                 for (let y = 0; y < matrix[x].length; y++) {
-                    matrix[x][y].real = this.apply(matrix[x][y].real);
+                    matrix[x][y] = this.apply(matrix[x][y]);
                 }
             }
         };
-        this.applyFirstBellToMatrix = (matrix) => {
-            for (let x = 0; x < matrix.length; x++) {
-                for (let y = 0; y < matrix[x].length; y++) {
-                    matrix[x][y].real = this.applyFirstBell(matrix[x][y].real);
-                }
-            }
-        };
+        this.c2 = 2 * Math.pow(c, 2);
     }
 }
 export { Lenia };
