@@ -1,6 +1,6 @@
-import { Complex, complexMul } from "./complex.js"
-import { FFT2D, inverseFFT2D } from "./fftconvolution.js"
+import { IKernelRunShortcut } from "gpu.js"
 import { FrameCounter } from "./framecounter.js"
+import { createGPUConvolution } from "./gpuconvolution.js"
 
 class Lenia {
 
@@ -13,6 +13,8 @@ class Lenia {
     growthFunction: GrowthFunction
 
     frameCounter?: FrameCounter
+
+    gpuConvolution: IKernelRunShortcut
 
     constructor(
         private size: number, 
@@ -36,15 +38,15 @@ class Lenia {
             }
         }
 
-        this.growthFunction = new GrowthFunction(this.stateResolution * 2, 18, 1.4, -this.stateResolution, this.stateResolution)
+        this.growthFunction = new GrowthFunction(this.stateResolution * 2, 18, 1, -this.stateResolution, this.stateResolution)
 
         this.kernel = generateKernel([
                 new GrowthFunction(0.1, 0, 2, 0, this.stateResolution),
-                new GrowthFunction(0.4, 7, 3, 0, this.stateResolution),
-                new GrowthFunction(0.2, 14, 2, 0, this.stateResolution)
             ],
             20
         )
+
+        this.gpuConvolution = createGPUConvolution(size)
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
@@ -67,7 +69,7 @@ class Lenia {
 
     update = () => {
 
-        const convolution = convolve(this.points, this.kernel)
+        const convolution = this.gpuConvolution(this.points, this.size, this.kernel, this.kernel.length) as number[][]
 
         console.log(convolution[64][64])
 

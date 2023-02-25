@@ -1,6 +1,6 @@
 import { Lenia } from "./lenia.js"
 
-const SPACE_SIZE = 128
+const SPACE_SIZE = 256
 const STATE_RESOLUTION = 256
 
 const canvas = document.querySelector('canvas')

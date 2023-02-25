@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FrameCounter = void 0;
 class FrameCounter {
     constructor() {
         this.frameCount = 0;
@@ -13,4 +16,4 @@ class FrameCounter {
         this.timeStamp = Date.now();
     }
 }
-export { FrameCounter };
+exports.FrameCounter = FrameCounter;

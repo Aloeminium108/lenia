@@ -1,4 +1,8 @@
-import { FrameCounter } from "./framecounter.js";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Lenia = void 0;
+const framecounter_js_1 = require("./framecounter.js");
+const gpuconvolution_js_1 = require("./gpuconvolution.js");
 class Lenia {
     constructor(size, 
     // Although the states of vectors in Lenia are, strictly speaking,
@@ -20,7 +24,7 @@ class Lenia {
             this.ctx.putImageData(this.image, 0, 0);
         };
         this.update = () => {
-            const convolution = convolve(this.points, this.kernel);
+            const convolution = this.gpuConvolution(this.points, this.size, this.kernel, this.kernel.length);
             console.log(convolution[64][64]);
             this.growthFunction.applyToMatrix(convolution);
             console.log(convolution[64][64]);
@@ -56,15 +60,15 @@ class Lenia {
                 this.points[i][j] = rand;
             }
         }
-        this.growthFunction = new GrowthFunction(this.stateResolution * 2, 18, 1.4, -this.stateResolution, this.stateResolution);
+        this.growthFunction = new GrowthFunction(this.stateResolution * 2, 18, 1, -this.stateResolution, this.stateResolution);
         this.kernel = generateKernel([
             new GrowthFunction(0.1, 0, 2, 0, this.stateResolution),
-            new GrowthFunction(0.4, 7, 3, 0, this.stateResolution),
-            new GrowthFunction(0.2, 14, 2, 0, this.stateResolution)
         ], 20);
-        this.frameCounter = countFrames ? new FrameCounter() : undefined;
+        this.gpuConvolution = (0, gpuconvolution_js_1.createGPUConvolution)(size);
+        this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }
+exports.Lenia = Lenia;
 function convolve(matrix, kernel) {
     const convolution = [];
     for (let x1 = 0; x1 < matrix.length; x1++) {
@@ -124,4 +128,3 @@ class GrowthFunction {
         this.c2 = 2 * Math.pow(c, 2);
     }
 }
-export { Lenia };

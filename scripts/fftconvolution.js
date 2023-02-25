@@ -1,4 +1,7 @@
-import { complexAdd, complexDiv, complexMul, complexSub, eulerExp } from "./complex.js";
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FFT2DConvolution = exports.inverseFFT2D = exports.FFT2D = void 0;
+const complex_js_1 = require("./complex.js");
 function FFT2DConvolution(matrix, kernel) {
     const fftMatrix = FFT2D(matrix);
     const fftKernel = FFT2D(kernel);
@@ -6,11 +9,12 @@ function FFT2DConvolution(matrix, kernel) {
     for (let x = 0; x < matrix.length; x++) {
         output[x] = [];
         for (let y = 0; y < matrix[x].length; y++) {
-            output[x][y] = complexMul(fftMatrix[x][y], fftKernel[x][y]);
+            output[x][y] = (0, complex_js_1.complexMul)(fftMatrix[x][y], fftKernel[x][y]);
         }
     }
     return inverseFFT2D(output);
 }
+exports.FFT2DConvolution = FFT2DConvolution;
 function FFT2D(matrix) {
     let fftMatrix = [];
     matrix.forEach(column => {
@@ -40,6 +44,7 @@ function FFT2D(matrix) {
     }
     return output;
 }
+exports.FFT2D = FFT2D;
 function inverseFFT2D(matrix) {
     let transposeMatrix = [];
     for (let x = 0; x < matrix.length; x++) {
@@ -69,12 +74,13 @@ function inverseFFT2D(matrix) {
     });
     return output;
 }
+exports.inverseFFT2D = inverseFFT2D;
 function FFTConvolution(vector, kernel) {
     const fftKernel = FFT(kernel.reverse());
     const fftMatrix = FFT(vector);
     const output = new Array(vector.length);
     for (let i = 0; i < vector.length; i++) {
-        output[i] = complexMul(fftKernel[i], fftMatrix[i]);
+        output[i] = (0, complex_js_1.complexMul)(fftKernel[i], fftMatrix[i]);
     }
     return inverseFFT(output);
 }
@@ -94,11 +100,11 @@ function _inverseFFTRecursive(vector) {
         return;
     const angle = -2 * Math.PI / N;
     for (let k = 0; k < N / 2; k++) {
-        const factor = complexDiv(eulerExp(angle * -k), 2);
+        const factor = (0, complex_js_1.complexDiv)((0, complex_js_1.eulerExp)(angle * -k), 2);
         const y0 = vector[k];
         const y1 = vector[k + N / 2];
-        vector[k] = complexDiv(complexAdd(y0, y1), 2);
-        vector[k + N / 2] = complexMul(complexSub(y0, y1), factor);
+        vector[k] = (0, complex_js_1.complexDiv)((0, complex_js_1.complexAdd)(y0, y1), 2);
+        vector[k + N / 2] = (0, complex_js_1.complexMul)((0, complex_js_1.complexSub)(y0, y1), factor);
     }
     const lower = new Array(N / 2);
     const upper = new Array(N / 2);
@@ -137,9 +143,8 @@ function _FFTRecursive(vector) {
     _FFTRecursive(odd);
     const angle = -2 * Math.PI / N;
     for (let k = 0; k < N / 2; k++) {
-        const factor = complexMul(eulerExp(angle * k), odd[k]);
-        vector[k] = complexAdd(even[k], factor);
-        vector[k + N / 2] = complexSub(even[k], factor);
+        const factor = (0, complex_js_1.complexMul)((0, complex_js_1.eulerExp)(angle * k), odd[k]);
+        vector[k] = (0, complex_js_1.complexAdd)(even[k], factor);
+        vector[k + N / 2] = (0, complex_js_1.complexSub)(even[k], factor);
     }
 }
-export { FFT2D, inverseFFT2D, FFT2DConvolution };

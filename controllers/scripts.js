@@ -1,8 +1,6 @@
 const router = require('express').Router()
 const fs = require('fs')
 
-
-
 router.get('/:script', (req, res) => {
 
     var script
@@ -15,7 +13,7 @@ router.get('/:script', (req, res) => {
         script = file
 
         res.writeHeader(200, {
-            "Content-Type": "text/javascript",
+            "Content-Type": "text/javascript"
         })
 
         res.write(script)
