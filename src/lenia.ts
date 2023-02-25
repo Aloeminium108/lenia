@@ -6,7 +6,7 @@ import { generateKernel } from "./kernel.js"
 
 class Lenia {
 
-    dt: number = 0.1
+    dt: number = 0.05
 
     image: ImageData
     points: number[][]
@@ -20,9 +20,6 @@ class Lenia {
 
     constructor(
         private size: number, 
-        // Although the states of vectors in Lenia are, strictly speaking,
-        // on the interval of [0, 1], an interval of [0, stateResolution]
-        // is used here instead to avoid redundant calculations
         private ctx: CanvasRenderingContext2D,
         countFrames: boolean = false
     ) {
@@ -39,9 +36,9 @@ class Lenia {
             }
         }
 
-        this.growthFunction = createGrowthFunction(0.15, 0.02, FunctionShape.RECTANGLE)
+        this.growthFunction = createGrowthFunction(0.15, 0.02, FunctionShape.POLYNOMIAL)
 
-        this.kernel = generateKernel([1, 0.5], 0.2, 20, FunctionShape.RECTANGLE)
+        this.kernel = generateKernel([1, 0.5, 0.25], 0.3, 20, FunctionShape.POLYNOMIAL)
 
         this.gpuConvolution = createGPUConvolution(size)
 

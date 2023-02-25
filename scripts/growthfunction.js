@@ -7,6 +7,17 @@ function createGrowthFunction(center, width, shape) {
             return (value) => {
                 return Math.abs(value - center) < width ? 1 : -1;
             };
+        case FunctionShape.POLYNOMIAL:
+            const alpha = 4;
+            const sigma = 9 * (Math.pow(width, 2));
+            return (value) => {
+                if (Math.abs(value - center) < 3.0 * width) {
+                    return 2 * (Math.pow((1 - (Math.pow((value - center), 2)) / sigma), alpha)) - 1.0;
+                }
+                else {
+                    return -1;
+                }
+            };
         default:
             return (value) => {
                 return Math.abs(value - center) < width ? 1 : -1;

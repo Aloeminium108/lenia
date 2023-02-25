@@ -36,6 +36,15 @@ function generateKernel(betas: number[], coreWidth: number, radius: number, shap
 function generateCore(coreWidth: number, shape: FunctionShape): (distance: number) => number {
 
     switch (shape as FunctionShape) {
+
+        case FunctionShape.RECTANGLE:
+
+        case FunctionShape.POLYNOMIAL:
+            const alpha = 4
+            return (distance: number) => {
+                return (4 * distance * (1 - distance)) ** alpha
+            }
+
         default:
             return (value: number) => {
                 return Math.abs(value - 0.5) < coreWidth ? 1 : 0

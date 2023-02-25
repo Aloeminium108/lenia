@@ -31573,6 +31573,17 @@ function createGrowthFunction(center, width, shape) {
             return (value) => {
                 return Math.abs(value - center) < width ? 1 : -1;
             };
+        case FunctionShape.POLYNOMIAL:
+            const alpha = 4;
+            const sigma = 9 * (Math.pow(width, 2));
+            return (value) => {
+                if (Math.abs(value - center) < 3.0 * width) {
+                    return 2 * (Math.pow((1 - (Math.pow((value - center), 2)) / sigma), alpha)) - 1.0;
+                }
+                else {
+                    return -1;
+                }
+            };
         default:
             return (value) => {
                 return Math.abs(value - center) < width ? 1 : -1;
@@ -31592,6 +31603,7 @@ exports.FunctionShape = FunctionShape;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateKernel = void 0;
+const growthfunction_1 = require("./growthfunction");
 function generateKernel(betas, coreWidth, radius, shape) {
     const b_rank = betas.length - 1;
     const kernel_core = generateCore(coreWidth, shape);
@@ -31615,6 +31627,12 @@ function generateKernel(betas, coreWidth, radius, shape) {
 exports.generateKernel = generateKernel;
 function generateCore(coreWidth, shape) {
     switch (shape) {
+        case growthfunction_1.FunctionShape.RECTANGLE:
+        case growthfunction_1.FunctionShape.POLYNOMIAL:
+            const alpha = 4;
+            return (distance) => {
+                return Math.pow((4 * distance * (1 - distance)), alpha);
+            };
         default:
             return (value) => {
                 return Math.abs(value - 0.5) < coreWidth ? 1 : 0;
@@ -31635,7 +31653,7 @@ function normalize(kernel) {
     }
 }
 
-},{}],165:[function(require,module,exports){
+},{"./growthfunction":163}],165:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
@@ -31644,14 +31662,10 @@ const gpuconvolution_js_1 = require("./gpuconvolution.js");
 const growthfunction_js_1 = require("./growthfunction.js");
 const kernel_js_1 = require("./kernel.js");
 class Lenia {
-    constructor(size, 
-    // Although the states of vectors in Lenia are, strictly speaking,
-    // on the interval of [0, 1], an interval of [0, stateResolution]
-    // is used here instead to avoid redundant calculations
-    ctx, countFrames = false) {
+    constructor(size, ctx, countFrames = false) {
         this.size = size;
         this.ctx = ctx;
-        this.dt = 0.1;
+        this.dt = 0.05;
         this.draw = () => {
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
@@ -31703,8 +31717,8 @@ class Lenia {
                 this.points[i][j] = rand;
             }
         }
-        this.growthFunction = (0, growthfunction_js_1.createGrowthFunction)(0.15, 0.02, growthfunction_js_1.FunctionShape.RECTANGLE);
-        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.5], 0.2, 20, growthfunction_js_1.FunctionShape.RECTANGLE);
+        this.growthFunction = (0, growthfunction_js_1.createGrowthFunction)(0.15, 0.02, growthfunction_js_1.FunctionShape.POLYNOMIAL);
+        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.5, 0.25], 0.3, 20, growthfunction_js_1.FunctionShape.POLYNOMIAL);
         this.gpuConvolution = (0, gpuconvolution_js_1.createGPUConvolution)(size);
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
