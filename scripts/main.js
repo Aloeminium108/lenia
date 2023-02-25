@@ -9,7 +9,7 @@ if (canvas) {
     canvas.height = SPACE_SIZE;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-        const lenia = new lenia_js_1.Lenia(SPACE_SIZE, STATE_RESOLUTION, ctx, true);
+        const lenia = new lenia_js_1.Lenia(SPACE_SIZE, ctx, true);
         canvas.addEventListener('dblclick', (e) => {
             lenia.randomize();
         });

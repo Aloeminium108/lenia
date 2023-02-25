@@ -12,6 +12,8 @@
   "dependencies": {
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "gpu.js": "^2.16.0"
+    "express-react-views": "^0.11.0",
+    "gpu.js": "^2.16.0",
+    "react": "^18.2.0"
   }
 }
