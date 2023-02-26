@@ -5,15 +5,15 @@ const ctx = canvas.getContext('webgl2')!!
 
 const gpu = new GPU({canvas: canvas, context: ctx })
 
-function createUpdateFunction(matrixSize: number) {
-
-    function growthFunction(value: number, center: number, width: number) {
-        if (Math.abs(value - center) < 3.0 * width) {
-            return 2 * ((1 - ((value - center) ** 2) / (9 * center ** 2)) ** 4) - 1.0
-        } else {
-            return -1
-        }
+function growthFunction(value: number, center: number, width: number) {
+    if (Math.abs(value - center) < 3.0 * width) {
+        return 2 * ((1 - ((value - center) ** 2) / (9 * width ** 2)) ** 4) - 1.0
+    } else {
+        return -1
     }
+}
+
+function createUpdateFunction(matrixSize: number) {
 
     gpu.addFunction(growthFunction)
 
@@ -68,4 +68,4 @@ function createRenderFunction(matrixSize: number) {
     
 }
 
-export { createUpdateFunction, createRenderFunction }
+export { createUpdateFunction, createRenderFunction, growthFunction }

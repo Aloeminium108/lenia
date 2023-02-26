@@ -10,7 +10,25 @@ body {
 }
 
 canvas {
-    position: absolute;
     height: 100vh;
     width: 100vh;
+}
+
+#lenia-container {
+    width: fit-content;
+    height: fit-content;
+}
+
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-grow: 1;
+}
+
+#growth-curve {
+    background-color: black;
+    width: 300px;
+    height: 100px;
 }

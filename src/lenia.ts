@@ -1,6 +1,6 @@
 import { IKernelRunShortcut, Texture } from "gpu.js"
 import { FrameCounter } from "./framecounter.js"
-import { createRenderFunction, createUpdateFunction } from "./gpulenia.js"
+import { createRenderFunction, createUpdateFunction, growthFunction } from "./gpulenia.js"
 import { FunctionShape, generateKernel } from "./kernel.js"
 
 class Lenia {
@@ -27,7 +27,7 @@ class Lenia {
 
         this.points = this.randomize(size)
 
-        this.kernel = generateKernel([1], 0.3, 20, FunctionShape.POLYNOMIAL)
+        this.kernel = generateKernel([1, 0.7, 0.3], 0.2, 20, FunctionShape.POLYNOMIAL)
 
         this.update = createUpdateFunction(size)
         this.render = createRenderFunction(size)
@@ -35,9 +35,30 @@ class Lenia {
         this.render(this.points)
 
         const canvas = this.render.canvas as HTMLCanvasElement
-        document.body.appendChild(canvas)
+        document.getElementById('lenia-container')?.appendChild(canvas)
+
         canvas.addEventListener('dblclick', (e) => {
             this.points = this.randomize(size)
+
+            this.lastFrame = this.update(
+                this.points, 
+                this.size, 
+                this.kernel, 
+                this.kernel.length, 
+                this.dt,
+                this.growthCenter,
+                this.growthWidth
+            ) as Texture
+        })
+        
+        document.getElementById('growth-center')?.addEventListener('change', (e) => {
+            this.growthCenter = parseFloat((e.target as HTMLInputElement).value)
+            this.drawGrowthCurve()
+        })
+
+        document.getElementById('growth-width')?.addEventListener('change', (e) => {
+            this.growthWidth = parseFloat((e.target as HTMLInputElement).value)
+            this.drawGrowthCurve()
         })
 
         this.lastFrame = this.update(
@@ -49,6 +70,8 @@ class Lenia {
             this.growthCenter,
             this.growthWidth
         ) as Texture
+
+        this.drawGrowthCurve()
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
@@ -89,6 +112,27 @@ class Lenia {
         }
 
         return points
+
+    }
+
+    drawGrowthCurve = () => {
+        const canvas = document.getElementById('growth-curve') as HTMLCanvasElement
+
+        canvas.width = 1000
+        canvas.height = 100
+
+        if (canvas) {
+            const ctx = canvas.getContext('2d')!!
+
+            ctx.fillStyle = 'orange'
+
+            for (let x = 0; x < canvas.width; x++) {
+
+                const y = (canvas.height / 2) - ((canvas.height / 2.5) * growthFunction(x/canvas.width, this.growthCenter, this.growthWidth))
+
+                ctx.fillRect(x, y, 2, 2)
+            }
+        }
 
     }
 
