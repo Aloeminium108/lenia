@@ -31542,11 +31542,22 @@ exports.FrameCounter = FrameCounter;
 },{}],162:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createGPUConvolution = void 0;
+exports.createRenderFunction = exports.createUpdateFunction = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
-const gpu = new index_js_1.GPU();
-function createGPUConvolution(matrixSize) {
-    const gpuConvolve = gpu.createKernel(function (matrix, m_Size, kernel, k_Size) {
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('webgl2');
+const gpu = new index_js_1.GPU({ canvas: canvas, context: ctx });
+function createUpdateFunction(matrixSize) {
+    function growthFunction(value, center, width) {
+        if (Math.abs(value - center) < 3.0 * width) {
+            return 2 * (Math.pow((1 - (Math.pow((value - center), 2)) / (9 * Math.pow(center, 2))), 4)) - 1.0;
+        }
+        else {
+            return -1;
+        }
+    }
+    gpu.addFunction(growthFunction);
+    const update = gpu.createKernel(function (matrix, m_Size, kernel, k_Size, dt, center, width) {
         const radius = Math.floor(k_Size / 2);
         let sum = 0;
         for (let x = 0; x < k_Size; x++) {
@@ -31558,11 +31569,23 @@ function createGPUConvolution(matrixSize) {
                 sum += kernel[x][y] * matrix[i][j];
             }
         }
-        return sum;
-    }).setOutput([matrixSize, matrixSize]);
-    return gpuConvolve;
+        return Math.min(Math.max((dt * growthFunction(sum, center, width) + matrix[this.thread.y][this.thread.x]), 0), 1);
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true);
+    return update;
 }
-exports.createGPUConvolution = createGPUConvolution;
+exports.createUpdateFunction = createUpdateFunction;
+function createRenderFunction(matrixSize) {
+    const render = gpu.createKernel(function (matrix) {
+        this.color(0, 0, matrix[this.thread.x][this.thread.y], 255);
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setGraphical(true);
+    return render;
+}
+exports.createRenderFunction = createRenderFunction;
 
 },{"/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js":155}],163:[function(require,module,exports){
 "use strict";
@@ -31659,88 +31682,57 @@ function normalize(kernel) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
-const gpuconvolution_js_1 = require("./gpuconvolution.js");
+const gpulenia_js_1 = require("./gpulenia.js");
 const growthfunction_js_1 = require("./growthfunction.js");
 const kernel_js_1 = require("./kernel.js");
 class Lenia {
-    constructor(size, ctx, countFrames = false) {
+    constructor(size, growthCenter, growthWidth, countFrames = false) {
         this.size = size;
-        this.ctx = ctx;
+        this.growthCenter = growthCenter;
+        this.growthWidth = growthWidth;
         this.dt = 0.05;
-        this.draw = () => {
-            for (let x = 0; x < this.size; x++) {
-                for (let y = 0; y < this.size; y++) {
-                    const index = (x + y * this.size) * 4;
-                    this.image.data[index + 2] = Math.floor(this.points[x][y] * 255);
-                    this.image.data[index + 3] = 255;
-                }
-            }
-            this.ctx.putImageData(this.image, 0, 0);
-        };
-        this.update = () => {
-            const convolution = this.gpuConvolution(this.points, this.size, this.kernel, this.kernel.length);
-            for (let x = 0; x < this.size; x++) {
-                for (let y = 0; y < this.size; y++) {
-                    convolution[x][y] = this.growthFunction(convolution[x][y]);
-                }
-            }
-            for (let x = 0; x < this.size; x++) {
-                for (let y = 0; y < this.size; y++) {
-                    this.points[x][y] = Math.min(Math.max(this.points[x][y] + convolution[x][y] * this.dt, 0), 1);
-                }
-            }
-        };
         this.animate = () => {
-            var _a;
-            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            this.update();
-            this.draw();
-            (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
+            var _a, _b;
+            const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
+            this.render(frame);
+            (_a = this.lastFrame) === null || _a === void 0 ? void 0 : _a.delete();
+            this.lastFrame = frame;
+            (_b = this.frameCounter) === null || _b === void 0 ? void 0 : _b.countFrame();
             requestAnimationFrame(this.animate);
         };
-        this.randomize = () => {
-            for (let i = 0; i < this.size; i++) {
-                this.points[i] = [];
-                for (let j = 0; j < this.size; j++) {
+        this.randomize = (size) => {
+            let points = [];
+            for (let i = 0; i < size; i++) {
+                points[i] = [];
+                for (let j = 0; j < size; j++) {
                     const rand = Math.random();
-                    this.points[i][j] = rand;
+                    points[i][j] = rand;
                 }
             }
+            return points;
         };
-        this.image = ctx.createImageData(size, size);
-        this.points = [];
-        for (let i = 0; i < size; i++) {
-            this.points[i] = [];
-            for (let j = 0; j < size; j++) {
-                const rand = Math.random();
-                this.points[i][j] = rand;
-            }
-        }
-        this.growthFunction = (0, growthfunction_js_1.createGrowthFunction)(0.15, 0.02, growthfunction_js_1.FunctionShape.POLYNOMIAL);
-        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 10, growthfunction_js_1.FunctionShape.POLYNOMIAL);
-        this.gpuConvolution = (0, gpuconvolution_js_1.createGPUConvolution)(size);
+        this.points = this.randomize(size);
+        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 20, growthfunction_js_1.FunctionShape.POLYNOMIAL);
+        this.update = (0, gpulenia_js_1.createUpdateFunction)(size);
+        this.render = (0, gpulenia_js_1.createRenderFunction)(size);
+        this.render(this.points);
+        const canvas = this.render.canvas;
+        document.body.appendChild(canvas);
+        canvas.addEventListener('dblclick', (e) => {
+            this.points = this.randomize(size);
+        });
+        this.lastFrame = this.update(this.points, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }
 exports.Lenia = Lenia;
 
-},{"./framecounter.js":161,"./gpuconvolution.js":162,"./growthfunction.js":163,"./kernel.js":164}],166:[function(require,module,exports){
+},{"./framecounter.js":161,"./gpulenia.js":162,"./growthfunction.js":163,"./kernel.js":164}],166:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");
 const SPACE_SIZE = 512;
-const canvas = document.querySelector('canvas');
-if (canvas) {
-    canvas.width = SPACE_SIZE;
-    canvas.height = SPACE_SIZE;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-        const lenia = new lenia_js_1.Lenia(SPACE_SIZE, ctx, true);
-        canvas.addEventListener('dblclick', (e) => {
-            lenia.randomize();
-        });
-        lenia.animate();
-    }
-}
+const lenia = new lenia_js_1.Lenia(SPACE_SIZE, 0.15, 0.02, true);
+lenia.animate();
 
 },{"./lenia.js":165}]},{},[166]);

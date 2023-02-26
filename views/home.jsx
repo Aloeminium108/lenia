@@ -4,7 +4,7 @@ const Def = require('./default')
 function home () {
     return (
         <Def>
-            <canvas></canvas>
+            <div id='lenia-container'></div>
             <script src="./bundle.js"></script>
          </Def>
     )

@@ -1,6 +1,6 @@
-import { IKernelRunShortcut } from "gpu.js"
+import { IKernelRunShortcut, Texture } from "gpu.js"
 import { FrameCounter } from "./framecounter.js"
-import { createGPUConvolution } from "./gpuconvolution.js"
+import { createRenderFunction, createUpdateFunction } from "./gpulenia.js"
 import { createGrowthFunction, FunctionShape } from "./growthfunction.js"
 import { generateKernel } from "./kernel.js"
 
@@ -8,98 +8,89 @@ class Lenia {
 
     dt: number = 0.05
 
-    image: ImageData
     points: number[][]
 
     kernel: number[][]
-    growthFunction: (value: number) => number
+
+    update: IKernelRunShortcut
+    render: IKernelRunShortcut
+
+    lastFrame: Texture
 
     frameCounter?: FrameCounter
 
-    gpuConvolution: IKernelRunShortcut
-
     constructor(
         private size: number, 
-        private ctx: CanvasRenderingContext2D,
+        private growthCenter: number,
+        private growthWidth: number,
         countFrames: boolean = false
     ) {
 
-        this.image = ctx.createImageData(size, size)
+        this.points = this.randomize(size)
 
-        this.points = [];
+        this.kernel = generateKernel([1], 0.3, 20, FunctionShape.POLYNOMIAL)
 
-        for(let i = 0; i < size; i++) {
-            this.points[i] = [];
-            for(let j = 0; j < size; j++) {
-                const rand = Math.random()
-                this.points[i][j] = rand
-            }
-        }
+        this.update = createUpdateFunction(size)
+        this.render = createRenderFunction(size)
 
-        this.growthFunction = createGrowthFunction(0.15, 0.02, FunctionShape.POLYNOMIAL)
+        this.render(this.points)
 
-        this.kernel = generateKernel([1], 0.3, 10, FunctionShape.POLYNOMIAL)
+        const canvas = this.render.canvas as HTMLCanvasElement
+        document.body.appendChild(canvas)
+        canvas.addEventListener('dblclick', (e) => {
+            this.points = this.randomize(size)
+        })
 
-        this.gpuConvolution = createGPUConvolution(size)
+        this.lastFrame = this.update(
+            this.points, 
+            this.size, 
+            this.kernel, 
+            this.kernel.length, 
+            this.dt,
+            this.growthCenter,
+            this.growthWidth
+        ) as Texture
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
     }
 
-    draw = () => {
-        for (let x = 0; x < this.size; x++) {
-            for (let y = 0; y < this.size; y++) {
-
-                const index = (x + y * this.size) * 4
-
-                this.image.data[index + 2] = Math.floor(this.points[x][y] * 255)
-                this.image.data[index + 3] = 255
-
-            }
-        }
-
-        this.ctx.putImageData(this.image, 0, 0)
-    }
-
-    update = () => {
-
-        const convolution = this.gpuConvolution(this.points, this.size, this.kernel, this.kernel.length) as number[][]
-
-        for (let x = 0; x < this.size; x++) {
-            for (let y = 0; y < this.size; y++) {
-                convolution[x][y] = this.growthFunction(convolution[x][y])
-            }
-        }
-
-        for (let x = 0; x < this.size; x++) {
-            for (let y = 0; y < this.size; y++) {
-                this.points[x][y] = Math.min(Math.max(this.points[x][y] + convolution[x][y] * this.dt, 0), 1)
-            }
-        }
-    }
-
     animate = () => {
-        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
 
-        this.update()
+        const frame = this.update(
+            this.lastFrame, 
+            this.size, 
+            this.kernel, 
+            this.kernel.length, 
+            this.dt, 
+            this.growthCenter,
+            this.growthWidth
+        ) as Texture
 
-        this.draw()
+        this.render(frame)
+        
+        this.lastFrame?.delete()
+        this.lastFrame = frame
 
         this.frameCounter?.countFrame()
 
         requestAnimationFrame(this.animate)
     }
 
-    randomize = () => {
-        for(let i = 0; i < this.size; i++) {
-            this.points[i] = [];
-            for(let j = 0; j < this.size; j++) {
+    randomize = (size: number) => {
 
+        let points: number[][] = []
+
+        for(let i = 0; i < size; i++) {
+            points[i] = [];
+            for(let j = 0; j < size; j++) {
                 const rand = Math.random()
-
-                this.points[i][j] = rand
+                points[i][j] = rand
             }
         }
+
+        return points
+
     }
 
 }

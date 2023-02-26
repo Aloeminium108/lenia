@@ -2,66 +2,46 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
-const gpuconvolution_js_1 = require("./gpuconvolution.js");
+const gpulenia_js_1 = require("./gpulenia.js");
 const growthfunction_js_1 = require("./growthfunction.js");
 const kernel_js_1 = require("./kernel.js");
 class Lenia {
-    constructor(size, ctx, countFrames = false) {
+    constructor(size, growthCenter, growthWidth, countFrames = false) {
         this.size = size;
-        this.ctx = ctx;
+        this.growthCenter = growthCenter;
+        this.growthWidth = growthWidth;
         this.dt = 0.05;
-        this.draw = () => {
-            for (let x = 0; x < this.size; x++) {
-                for (let y = 0; y < this.size; y++) {
-                    const index = (x + y * this.size) * 4;
-                    this.image.data[index + 2] = Math.floor(this.points[x][y] * 255);
-                    this.image.data[index + 3] = 255;
-                }
-            }
-            this.ctx.putImageData(this.image, 0, 0);
-        };
-        this.update = () => {
-            const convolution = this.gpuConvolution(this.points, this.size, this.kernel, this.kernel.length);
-            for (let x = 0; x < this.size; x++) {
-                for (let y = 0; y < this.size; y++) {
-                    convolution[x][y] = this.growthFunction(convolution[x][y]);
-                }
-            }
-            for (let x = 0; x < this.size; x++) {
-                for (let y = 0; y < this.size; y++) {
-                    this.points[x][y] = Math.min(Math.max(this.points[x][y] + convolution[x][y] * this.dt, 0), 1);
-                }
-            }
-        };
         this.animate = () => {
-            var _a;
-            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-            this.update();
-            this.draw();
-            (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
+            var _a, _b;
+            const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
+            this.render(frame);
+            (_a = this.lastFrame) === null || _a === void 0 ? void 0 : _a.delete();
+            this.lastFrame = frame;
+            (_b = this.frameCounter) === null || _b === void 0 ? void 0 : _b.countFrame();
             requestAnimationFrame(this.animate);
         };
-        this.randomize = () => {
-            for (let i = 0; i < this.size; i++) {
-                this.points[i] = [];
-                for (let j = 0; j < this.size; j++) {
+        this.randomize = (size) => {
+            let points = [];
+            for (let i = 0; i < size; i++) {
+                points[i] = [];
+                for (let j = 0; j < size; j++) {
                     const rand = Math.random();
-                    this.points[i][j] = rand;
+                    points[i][j] = rand;
                 }
             }
+            return points;
         };
-        this.image = ctx.createImageData(size, size);
-        this.points = [];
-        for (let i = 0; i < size; i++) {
-            this.points[i] = [];
-            for (let j = 0; j < size; j++) {
-                const rand = Math.random();
-                this.points[i][j] = rand;
-            }
-        }
-        this.growthFunction = (0, growthfunction_js_1.createGrowthFunction)(0.15, 0.02, growthfunction_js_1.FunctionShape.POLYNOMIAL);
-        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 10, growthfunction_js_1.FunctionShape.POLYNOMIAL);
-        this.gpuConvolution = (0, gpuconvolution_js_1.createGPUConvolution)(size);
+        this.points = this.randomize(size);
+        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 20, growthfunction_js_1.FunctionShape.POLYNOMIAL);
+        this.update = (0, gpulenia_js_1.createUpdateFunction)(size);
+        this.render = (0, gpulenia_js_1.createRenderFunction)(size);
+        this.render(this.points);
+        const canvas = this.render.canvas;
+        document.body.appendChild(canvas);
+        canvas.addEventListener('dblclick', (e) => {
+            this.points = this.randomize(size);
+        });
+        this.lastFrame = this.update(this.points, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }
