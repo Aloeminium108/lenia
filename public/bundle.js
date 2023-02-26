@@ -31547,12 +31547,13 @@ const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu
 const gpu = new index_js_1.GPU();
 function createGPUConvolution(matrixSize) {
     const gpuConvolve = gpu.createKernel(function (matrix, m_Size, kernel, k_Size) {
+        const radius = Math.floor(k_Size / 2);
         let sum = 0;
         for (let x = 0; x < k_Size; x++) {
             for (let y = 0; y < k_Size; y++) {
-                let i = (this.thread.y) - (x - Math.floor(k_Size / 2));
+                let i = (this.thread.y) - (x - radius);
                 i = (i + m_Size) % m_Size;
-                let j = (this.thread.x) - (y - Math.floor(k_Size / 2));
+                let j = (this.thread.x) - (y - radius);
                 j = (j + m_Size) % m_Size;
                 sum += kernel[x][y] * matrix[i][j];
             }
@@ -31618,7 +31619,7 @@ function generateKernel(betas, coreWidth, radius, shape) {
             const dx = x - radius;
             const dy = y - radius;
             const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-            points[x][y] = kernelSkeleton(distance / radius);
+            points[x][y] = distance <= radius ? kernelSkeleton(distance / radius) : 0;
         }
     }
     normalize(points);
@@ -31678,13 +31679,11 @@ class Lenia {
         };
         this.update = () => {
             const convolution = this.gpuConvolution(this.points, this.size, this.kernel, this.kernel.length);
-            console.log(convolution[128][128]);
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
                     convolution[x][y] = this.growthFunction(convolution[x][y]);
                 }
             }
-            console.log(convolution[128][128]);
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
                     this.points[x][y] = Math.min(Math.max(this.points[x][y] + convolution[x][y] * this.dt, 0), 1);
@@ -31718,7 +31717,7 @@ class Lenia {
             }
         }
         this.growthFunction = (0, growthfunction_js_1.createGrowthFunction)(0.15, 0.02, growthfunction_js_1.FunctionShape.POLYNOMIAL);
-        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.5, 0.25], 0.3, 20, growthfunction_js_1.FunctionShape.POLYNOMIAL);
+        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 10, growthfunction_js_1.FunctionShape.POLYNOMIAL);
         this.gpuConvolution = (0, gpuconvolution_js_1.createGPUConvolution)(size);
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
@@ -31729,8 +31728,7 @@ exports.Lenia = Lenia;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");
-const SPACE_SIZE = 256;
-const STATE_RESOLUTION = 256;
+const SPACE_SIZE = 512;
 const canvas = document.querySelector('canvas');
 if (canvas) {
     canvas.width = SPACE_SIZE;

@@ -23,7 +23,7 @@ function generateKernel(betas: number[], coreWidth: number, radius: number, shap
 
             const distance = Math.sqrt(dx ** 2 + dy ** 2)
 
-            points[x][y] = kernelSkeleton(distance / radius)
+            points[x][y] = distance <= radius ? kernelSkeleton(distance / radius) : 0
         }
     }
 

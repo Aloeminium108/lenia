@@ -1,8 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");
-const SPACE_SIZE = 256;
-const STATE_RESOLUTION = 256;
+const SPACE_SIZE = 512;
 const canvas = document.querySelector('canvas');
 if (canvas) {
     canvas.width = SPACE_SIZE;

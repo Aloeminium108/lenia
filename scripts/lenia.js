@@ -22,13 +22,11 @@ class Lenia {
         };
         this.update = () => {
             const convolution = this.gpuConvolution(this.points, this.size, this.kernel, this.kernel.length);
-            console.log(convolution[128][128]);
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
                     convolution[x][y] = this.growthFunction(convolution[x][y]);
                 }
             }
-            console.log(convolution[128][128]);
             for (let x = 0; x < this.size; x++) {
                 for (let y = 0; y < this.size; y++) {
                     this.points[x][y] = Math.min(Math.max(this.points[x][y] + convolution[x][y] * this.dt, 0), 1);
@@ -62,7 +60,7 @@ class Lenia {
             }
         }
         this.growthFunction = (0, growthfunction_js_1.createGrowthFunction)(0.15, 0.02, growthfunction_js_1.FunctionShape.POLYNOMIAL);
-        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.5, 0.25], 0.3, 20, growthfunction_js_1.FunctionShape.POLYNOMIAL);
+        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 10, growthfunction_js_1.FunctionShape.POLYNOMIAL);
         this.gpuConvolution = (0, gpuconvolution_js_1.createGPUConvolution)(size);
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }

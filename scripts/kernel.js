@@ -16,7 +16,7 @@ function generateKernel(betas, coreWidth, radius, shape) {
             const dx = x - radius;
             const dy = y - radius;
             const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-            points[x][y] = kernelSkeleton(distance / radius);
+            points[x][y] = distance <= radius ? kernelSkeleton(distance / radius) : 0;
         }
     }
     normalize(points);
