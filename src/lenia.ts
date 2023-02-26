@@ -1,8 +1,7 @@
 import { IKernelRunShortcut, Texture } from "gpu.js"
 import { FrameCounter } from "./framecounter.js"
 import { createRenderFunction, createUpdateFunction } from "./gpulenia.js"
-import { createGrowthFunction, FunctionShape } from "./growthfunction.js"
-import { generateKernel } from "./kernel.js"
+import { FunctionShape, generateKernel } from "./kernel.js"
 
 class Lenia {
 

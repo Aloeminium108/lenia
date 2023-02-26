@@ -31590,44 +31590,7 @@ exports.createRenderFunction = createRenderFunction;
 },{"/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js":155}],163:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FunctionShape = exports.createGrowthFunction = void 0;
-function createGrowthFunction(center, width, shape) {
-    switch (shape) {
-        case FunctionShape.RECTANGLE:
-            return (value) => {
-                return Math.abs(value - center) < width ? 1 : -1;
-            };
-        case FunctionShape.POLYNOMIAL:
-            const alpha = 4;
-            const sigma = 9 * (Math.pow(width, 2));
-            return (value) => {
-                if (Math.abs(value - center) < 3.0 * width) {
-                    return 2 * (Math.pow((1 - (Math.pow((value - center), 2)) / sigma), alpha)) - 1.0;
-                }
-                else {
-                    return -1;
-                }
-            };
-        default:
-            return (value) => {
-                return Math.abs(value - center) < width ? 1 : -1;
-            };
-    }
-}
-exports.createGrowthFunction = createGrowthFunction;
-var FunctionShape;
-(function (FunctionShape) {
-    FunctionShape[FunctionShape["RECTANGLE"] = 0] = "RECTANGLE";
-    FunctionShape[FunctionShape["POLYNOMIAL"] = 1] = "POLYNOMIAL";
-    FunctionShape[FunctionShape["EXPONENTIAL"] = 2] = "EXPONENTIAL";
-})(FunctionShape || (FunctionShape = {}));
-exports.FunctionShape = FunctionShape;
-
-},{}],164:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateKernel = void 0;
-const growthfunction_1 = require("./growthfunction");
+exports.FunctionShape = exports.generateKernel = void 0;
 function generateKernel(betas, coreWidth, radius, shape) {
     const b_rank = betas.length - 1;
     const kernel_core = generateCore(coreWidth, shape);
@@ -31651,8 +31614,8 @@ function generateKernel(betas, coreWidth, radius, shape) {
 exports.generateKernel = generateKernel;
 function generateCore(coreWidth, shape) {
     switch (shape) {
-        case growthfunction_1.FunctionShape.RECTANGLE:
-        case growthfunction_1.FunctionShape.POLYNOMIAL:
+        case FunctionShape.RECTANGLE:
+        case FunctionShape.POLYNOMIAL:
             const alpha = 4;
             return (distance) => {
                 return Math.pow((4 * distance * (1 - distance)), alpha);
@@ -31676,14 +31639,20 @@ function normalize(kernel) {
         }
     }
 }
+var FunctionShape;
+(function (FunctionShape) {
+    FunctionShape[FunctionShape["RECTANGLE"] = 0] = "RECTANGLE";
+    FunctionShape[FunctionShape["POLYNOMIAL"] = 1] = "POLYNOMIAL";
+    FunctionShape[FunctionShape["EXPONENTIAL"] = 2] = "EXPONENTIAL";
+})(FunctionShape || (FunctionShape = {}));
+exports.FunctionShape = FunctionShape;
 
-},{"./growthfunction":163}],165:[function(require,module,exports){
+},{}],164:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
 const gpulenia_js_1 = require("./gpulenia.js");
-const growthfunction_js_1 = require("./growthfunction.js");
 const kernel_js_1 = require("./kernel.js");
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
@@ -31712,7 +31681,7 @@ class Lenia {
             return points;
         };
         this.points = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 20, growthfunction_js_1.FunctionShape.POLYNOMIAL);
+        this.kernel = (0, kernel_js_1.generateKernel)([1], 0.3, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
         this.update = (0, gpulenia_js_1.createUpdateFunction)(size);
         this.render = (0, gpulenia_js_1.createRenderFunction)(size);
         this.render(this.points);
@@ -31727,7 +31696,7 @@ class Lenia {
 }
 exports.Lenia = Lenia;
 
-},{"./framecounter.js":161,"./gpulenia.js":162,"./growthfunction.js":163,"./kernel.js":164}],166:[function(require,module,exports){
+},{"./framecounter.js":161,"./gpulenia.js":162,"./kernel.js":163}],165:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");
@@ -31735,4 +31704,4 @@ const SPACE_SIZE = 512;
 const lenia = new lenia_js_1.Lenia(SPACE_SIZE, 0.15, 0.02, true);
 lenia.animate();
 
-},{"./lenia.js":165}]},{},[166]);
+},{"./lenia.js":164}]},{},[165]);

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateKernel = void 0;
-const growthfunction_1 = require("./growthfunction");
+exports.FunctionShape = exports.generateKernel = void 0;
 function generateKernel(betas, coreWidth, radius, shape) {
     const b_rank = betas.length - 1;
     const kernel_core = generateCore(coreWidth, shape);
@@ -25,8 +24,8 @@ function generateKernel(betas, coreWidth, radius, shape) {
 exports.generateKernel = generateKernel;
 function generateCore(coreWidth, shape) {
     switch (shape) {
-        case growthfunction_1.FunctionShape.RECTANGLE:
-        case growthfunction_1.FunctionShape.POLYNOMIAL:
+        case FunctionShape.RECTANGLE:
+        case FunctionShape.POLYNOMIAL:
             const alpha = 4;
             return (distance) => {
                 return Math.pow((4 * distance * (1 - distance)), alpha);
@@ -50,3 +49,10 @@ function normalize(kernel) {
         }
     }
 }
+var FunctionShape;
+(function (FunctionShape) {
+    FunctionShape[FunctionShape["RECTANGLE"] = 0] = "RECTANGLE";
+    FunctionShape[FunctionShape["POLYNOMIAL"] = 1] = "POLYNOMIAL";
+    FunctionShape[FunctionShape["EXPONENTIAL"] = 2] = "EXPONENTIAL";
+})(FunctionShape || (FunctionShape = {}));
+exports.FunctionShape = FunctionShape;

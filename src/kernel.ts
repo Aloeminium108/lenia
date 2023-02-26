@@ -1,4 +1,3 @@
-import { FunctionShape } from "./growthfunction";
 
 function generateKernel(betas: number[], coreWidth: number, radius: number, shape: FunctionShape) {
 
@@ -72,4 +71,10 @@ function normalize(kernel: number[][]) {
 
 }
 
-export { generateKernel }
+enum FunctionShape {
+    RECTANGLE,
+    POLYNOMIAL,
+    EXPONENTIAL
+}
+
+export { generateKernel, FunctionShape }
