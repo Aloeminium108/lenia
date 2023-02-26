@@ -1,20 +1,18 @@
 import { IKernelRunShortcut, Texture } from "gpu.js"
 import { FrameCounter } from "./framecounter.js"
-import { createRenderFunction, createUpdateFunction, growthFunction } from "./gpulenia.js"
+import { createRenderFunction, createUpdateFunction, growthFunction } from "./gpufunctions.js"
 import { FunctionShape, generateKernel } from "./kernel.js"
 
 class Lenia {
 
     dt: number = 0.05
 
-    points: number[][]
-
     kernel: number[][]
 
     update: IKernelRunShortcut
     render: IKernelRunShortcut
 
-    lastFrame: Texture
+    lastFrame: Texture | number[][]
 
     frameCounter?: FrameCounter
 
@@ -25,51 +23,23 @@ class Lenia {
         countFrames: boolean = false
     ) {
 
-        this.points = this.randomize(size)
+        this.lastFrame = this.randomize(size)
 
         this.kernel = generateKernel([1, 0.7, 0.3], 0.2, 20, FunctionShape.POLYNOMIAL)
 
         this.update = createUpdateFunction(size)
         this.render = createRenderFunction(size)
 
-        this.render(this.points)
+        this.render(this.lastFrame)
 
         const canvas = this.render.canvas as HTMLCanvasElement
         document.getElementById('lenia-container')?.appendChild(canvas)
 
         canvas.addEventListener('dblclick', (e) => {
-            this.points = this.randomize(size)
-
-            this.lastFrame = this.update(
-                this.points, 
-                this.size, 
-                this.kernel, 
-                this.kernel.length, 
-                this.dt,
-                this.growthCenter,
-                this.growthWidth
-            ) as Texture
+            this.lastFrame = this.randomize(size)
         })
         
-        document.getElementById('growth-center')?.addEventListener('change', (e) => {
-            this.growthCenter = parseFloat((e.target as HTMLInputElement).value)
-            this.drawGrowthCurve()
-        })
-
-        document.getElementById('growth-width')?.addEventListener('change', (e) => {
-            this.growthWidth = parseFloat((e.target as HTMLInputElement).value)
-            this.drawGrowthCurve()
-        })
-
-        this.lastFrame = this.update(
-            this.points, 
-            this.size, 
-            this.kernel, 
-            this.kernel.length, 
-            this.dt,
-            this.growthCenter,
-            this.growthWidth
-        ) as Texture
+        this.addEventListeners()
 
         this.drawGrowthCurve()
 
@@ -91,7 +61,7 @@ class Lenia {
 
         this.render(frame)
         
-        this.lastFrame?.delete()
+        if (this.lastFrame instanceof Texture) this.lastFrame.delete()
         this.lastFrame = frame
 
         this.frameCounter?.countFrame()
@@ -115,7 +85,7 @@ class Lenia {
 
     }
 
-    drawGrowthCurve = () => {
+    private drawGrowthCurve = () => {
         const canvas = document.getElementById('growth-curve') as HTMLCanvasElement
 
         canvas.width = 1000
@@ -134,6 +104,19 @@ class Lenia {
             }
         }
 
+    }
+
+    private addEventListeners = () => {
+
+        document.getElementById('growth-center')?.addEventListener('change', (e) => {
+            this.growthCenter = parseFloat((e.target as HTMLInputElement).value)
+            this.drawGrowthCurve()
+        })
+
+        document.getElementById('growth-width')?.addEventListener('change', (e) => {
+            this.growthWidth = parseFloat((e.target as HTMLInputElement).value)
+            this.drawGrowthCurve()
+        })
     }
 
 }
