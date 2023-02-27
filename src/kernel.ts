@@ -52,4 +52,16 @@ function normalize(kernel: number[][]) {
 
 }
 
-export { generateKernel }
+function findScale(kernel: number[][]) {
+    let max = 0
+
+    for (let x = 0; x < kernel.length; x++) {
+        for (let y = 0; y < kernel.length; y++) {
+            max = kernel[x][y] > max ? kernel[x][y] : max
+        }
+    }
+
+    return 255 / max
+}
+
+export { generateKernel, findScale }

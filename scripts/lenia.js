@@ -62,6 +62,26 @@ class Lenia {
                 ctx.stroke();
             }
         };
+        this.drawKernel = () => {
+            const canvas = document.getElementById('kernel-display');
+            canvas.width = this.kernel.length;
+            canvas.height = this.kernel.length;
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const kernelImage = ctx.createImageData(this.kernel.length, this.kernel.length);
+                const epsilon = 0.001;
+                for (let x = 0; x < this.kernel.length; x++) {
+                    for (let y = 0; y < this.kernel.length; y++) {
+                        const index = (x + (y * this.kernel.length)) * 4;
+                        kernelImage.data[index] = this.kernel[x][y] * this.kernelScale;
+                        kernelImage.data[index + 1] = this.kernel[x][y] * this.kernelScale;
+                        kernelImage.data[index + 2] = this.kernel[x][y] * this.kernelScale;
+                        kernelImage.data[index + 3] = 255;
+                    }
+                }
+                ctx.putImageData(kernelImage, 0, 0);
+            }
+        };
         this.addEventListeners = () => {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('wheel', enableScrollWheel);
@@ -90,7 +110,8 @@ class Lenia {
             });
         };
         this.lastFrame = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([0.3, 0.1, 0.6], 16, 20);
+        this.kernel = (0, kernel_js_1.generateKernel)([0.3, 0.6], 4, 20);
+        this.kernelScale = (0, kernel_js_1.findScale)(this.kernel);
         this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
         this.draw = (0, gpufunctions_js_1.createDrawFunction)(size);
         this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
@@ -123,6 +144,7 @@ class Lenia {
         };
         this.addEventListeners();
         this.drawGrowthCurve();
+        this.drawKernel();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }

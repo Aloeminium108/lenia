@@ -6,19 +6,21 @@ const DeltaControls = require('./controls/delta-controls')
 const ResetButton = require('./controls/reset-button')
 const ClearButton = require('./controls/clear-button')
 const BrushSize = require('./controls/brush-size')
+const KernelControls = require('./controls/kernel-controls')
 
 function home () {
     return (
         <Def>
 
             <div className='control-panel'>
-                <DeltaControls />
+                <KernelControls />
                 <GrowthControl />
             </div>
 
             <Lenia />
             
             <div className='control-panel'>
+                <DeltaControls />
                 <BrushSize />
                 <ResetButton />
                 <ClearButton />

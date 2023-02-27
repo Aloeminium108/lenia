@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateKernel = void 0;
+exports.findScale = exports.generateKernel = void 0;
 function generateKernel(betas, coreWidth, radius) {
     const b_rank = betas.length - 1;
     const kernel_core = (distance) => {
@@ -37,3 +37,13 @@ function normalize(kernel) {
         }
     }
 }
+function findScale(kernel) {
+    let max = 0;
+    for (let x = 0; x < kernel.length; x++) {
+        for (let y = 0; y < kernel.length; y++) {
+            max = kernel[x][y] > max ? kernel[x][y] : max;
+        }
+    }
+    return 255 / max;
+}
+exports.findScale = findScale;

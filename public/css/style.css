@@ -21,6 +21,11 @@ canvas {
     height: fit-content;
 }
 
+#kernel-display {
+    width: 300px;
+    height: 300px;
+}
+
 .control-panel {
     display: flex;
     flex-direction: column;

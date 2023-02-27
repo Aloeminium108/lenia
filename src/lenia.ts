@@ -1,7 +1,7 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
 import { createDrawFunction, createRenderFunction, createUpdateFunction, growthFunction } from "./gpufunctions.js"
-import { generateKernel } from "./kernel.js"
+import { findScale, generateKernel } from "./kernel.js"
 
 class Lenia {
 
@@ -11,6 +11,7 @@ class Lenia {
     brushSize: number = 10
 
     kernel: number[][]
+    kernelScale: number
 
     update: IKernelRunShortcut
     draw: IKernelRunShortcut
@@ -29,7 +30,8 @@ class Lenia {
 
         this.lastFrame = this.randomize(size)
 
-        this.kernel = generateKernel([0.3, 0.1, 0.6], 16, 20)
+        this.kernel = generateKernel([0.3, 0.6], 4, 20)
+        this.kernelScale = findScale(this.kernel)
 
         this.update = createUpdateFunction(size)
         this.draw = createDrawFunction(size)
@@ -75,6 +77,7 @@ class Lenia {
         this.addEventListeners()
 
         this.drawGrowthCurve()
+        this.drawKernel()
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
@@ -157,6 +160,36 @@ class Lenia {
 
         }
 
+    }
+
+    private drawKernel = () => {
+        const canvas = document.getElementById('kernel-display') as HTMLCanvasElement
+
+        canvas.width = this.kernel.length
+        canvas.height = this.kernel.length
+
+        if (canvas) {
+            const ctx = canvas.getContext('2d')!!
+
+            const kernelImage = ctx.createImageData(this.kernel.length, this.kernel.length)
+
+            const epsilon = 0.001
+
+            for (let x = 0; x < this.kernel.length; x++) {
+                for (let y = 0; y < this.kernel.length; y++) {
+                    const index = (x + (y * this.kernel.length)) * 4
+
+                    kernelImage.data[index] = this.kernel[x][y] * this.kernelScale
+                    kernelImage.data[index + 1] = this.kernel[x][y] * this.kernelScale
+                    kernelImage.data[index + 2] = this.kernel[x][y] * this.kernelScale
+                    kernelImage.data[index + 3] = 255
+                }
+            }
+
+            ctx.putImageData(kernelImage, 0, 0)
+
+        }
+        
     }
 
     private addEventListeners = () => {
