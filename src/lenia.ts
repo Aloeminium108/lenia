@@ -119,7 +119,7 @@ class Lenia {
         })
 
         document.getElementById('delta')?.addEventListener('change', (e) => {
-            this.dt = parseFloat((e.target as HTMLInputElement).value)
+            this.dt = parseFloat((e.target as HTMLInputElement).value) ** 2
         })
 
     }

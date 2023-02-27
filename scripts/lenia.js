@@ -57,7 +57,7 @@ class Lenia {
                 this.drawGrowthCurve();
             });
             (_c = document.getElementById('delta')) === null || _c === void 0 ? void 0 : _c.addEventListener('change', (e) => {
-                this.dt = parseFloat(e.target.value);
+                this.dt = Math.pow(parseFloat(e.target.value), 2);
             });
         };
         this.lastFrame = this.randomize(size);
