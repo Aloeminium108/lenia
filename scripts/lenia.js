@@ -12,10 +12,12 @@ class Lenia {
         this.growthCenter = growthCenter;
         this.growthWidth = growthWidth;
         this.dt = 0.05;
+        this.mousePressed = false;
+        this.brushSize = 15;
         this.animate = () => {
             var _a;
             const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
-            this.render(this.lastFrame);
+            this.render(frame);
             if (this.lastFrame instanceof index_js_1.Texture)
                 this.lastFrame.delete();
             this.lastFrame = frame;
@@ -64,12 +66,30 @@ class Lenia {
             });
         };
         this.lastFrame = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.7, 0.3], 0.2, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
+        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.7, 0.3], 0.1, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
         this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
+        this.draw = (0, gpufunctions_js_1.createDrawFunction)(size);
         this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
         this.render(this.lastFrame);
+        document.addEventListener('contextmenu', event => event.preventDefault());
         const canvas = this.render.canvas;
         (_a = document.getElementById('lenia-container')) === null || _a === void 0 ? void 0 : _a.appendChild(canvas);
+        canvas.onmousedown = (e) => {
+            this.mousePressed = true;
+            let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
+            let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
+            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+        };
+        canvas.onmousemove = (e) => {
+            if (!this.mousePressed)
+                return;
+            let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
+            let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
+            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+        };
+        canvas.onmouseup = (e) => {
+            this.mousePressed = false;
+        };
         this.addEventListeners();
         this.drawGrowthCurve();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;

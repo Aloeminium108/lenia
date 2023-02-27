@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.growthFunction = exports.createRenderFunction = exports.createUpdateFunction = void 0;
+exports.createDrawFunction = exports.growthFunction = exports.createRenderFunction = exports.createUpdateFunction = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('webgl2');
@@ -45,3 +45,13 @@ function createRenderFunction(matrixSize) {
     return render;
 }
 exports.createRenderFunction = createRenderFunction;
+function createDrawFunction(matrixSize) {
+    const draw = gpu.createKernel(function (matrix, x, y, radius, brush) {
+        const distX = x - this.thread.y;
+        const distY = y - this.thread.x;
+        const distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
+        return distance <= radius ? brush : matrix[this.thread.y][this.thread.x];
+    }).setOutput([matrixSize, matrixSize]);
+    return draw;
+}
+exports.createDrawFunction = createDrawFunction;

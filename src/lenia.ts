@@ -1,18 +1,22 @@
-import { IKernelRunShortcut, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
+import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
-import { createRenderFunction, createUpdateFunction, growthFunction } from "./gpufunctions.js"
+import { createDrawFunction, createRenderFunction, createUpdateFunction, growthFunction } from "./gpufunctions.js"
 import { FunctionShape, generateKernel } from "./kernel.js"
 
 class Lenia {
 
     dt: number = 0.05
 
+    mousePressed: boolean = false
+    brushSize: number = 15
+
     kernel: number[][]
 
     update: IKernelRunShortcut
+    draw: IKernelRunShortcut
     render: IKernelRunShortcut
 
-    lastFrame: Texture | number[][]
+    lastFrame: KernelOutput | number[][]
 
     frameCounter?: FrameCounter
 
@@ -25,15 +29,40 @@ class Lenia {
 
         this.lastFrame = this.randomize(size)
 
-        this.kernel = generateKernel([1, 0.7, 0.3], 0.2, 20, FunctionShape.POLYNOMIAL)
+        this.kernel = generateKernel([1, 0.7, 0.3], 0.1, 20, FunctionShape.POLYNOMIAL)
 
         this.update = createUpdateFunction(size)
+        this.draw = createDrawFunction(size)
         this.render = createRenderFunction(size)
 
         this.render(this.lastFrame)
 
+        document.addEventListener('contextmenu', event => event.preventDefault())
+
         const canvas = this.render.canvas as HTMLCanvasElement
         document.getElementById('lenia-container')?.appendChild(canvas)
+
+        canvas.onmousedown = (e) => {
+            this.mousePressed = true
+
+            let x = Math.floor((e.offsetX / (e.target as HTMLElement).offsetWidth) * this.size)
+            let y = Math.floor((e.offsetY / (e.target as HTMLElement).offsetHeight) * this.size)
+
+            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2)
+        }
+
+        canvas.onmousemove = (e) => {
+            if (!this.mousePressed) return
+
+            let x = Math.floor((e.offsetX / (e.target as HTMLElement).offsetWidth) * this.size)
+            let y = Math.floor((e.offsetY / (e.target as HTMLElement).offsetHeight) * this.size)
+
+            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2)
+        }
+
+        canvas.onmouseup = (e) => {
+            this.mousePressed = false
+        }
         
         this.addEventListeners()
 
@@ -53,9 +82,9 @@ class Lenia {
             this.dt, 
             this.growthCenter,
             this.growthWidth
-        ) as Texture
+        )
 
-        this.render(this.lastFrame)
+        this.render(frame)
         
         if (this.lastFrame instanceof Texture) this.lastFrame.delete()
         this.lastFrame = frame

@@ -10,7 +10,7 @@ function GrowthControls () {
             </div>
             <div>
                 <label htmlFor="growth-width">Width</label>
-                <input type="range" id="growth-width" name="growth-width" min="0" max="0.5" defaultValue="0.02" step="0.001" />
+                <input type="range" id="growth-width" name="growth-width" min="0" max="0.15" defaultValue="0.02" step="0.001" />
             </div>
         </ div>
     )

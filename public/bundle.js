@@ -31542,7 +31542,7 @@ exports.FrameCounter = FrameCounter;
 },{}],162:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.growthFunction = exports.createRenderFunction = exports.createUpdateFunction = void 0;
+exports.createDrawFunction = exports.growthFunction = exports.createRenderFunction = exports.createUpdateFunction = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('webgl2');
@@ -31587,6 +31587,16 @@ function createRenderFunction(matrixSize) {
     return render;
 }
 exports.createRenderFunction = createRenderFunction;
+function createDrawFunction(matrixSize) {
+    const draw = gpu.createKernel(function (matrix, x, y, radius, brush) {
+        const distX = x - this.thread.y;
+        const distY = y - this.thread.x;
+        const distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
+        return distance <= radius ? brush : matrix[this.thread.y][this.thread.x];
+    }).setOutput([matrixSize, matrixSize]);
+    return draw;
+}
+exports.createDrawFunction = createDrawFunction;
 
 },{"/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js":155}],163:[function(require,module,exports){
 "use strict";
@@ -31663,10 +31673,12 @@ class Lenia {
         this.growthCenter = growthCenter;
         this.growthWidth = growthWidth;
         this.dt = 0.05;
+        this.mousePressed = false;
+        this.brushSize = 15;
         this.animate = () => {
             var _a;
             const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
-            this.render(this.lastFrame);
+            this.render(frame);
             if (this.lastFrame instanceof index_js_1.Texture)
                 this.lastFrame.delete();
             this.lastFrame = frame;
@@ -31715,12 +31727,30 @@ class Lenia {
             });
         };
         this.lastFrame = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.7, 0.3], 0.2, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
+        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.7, 0.3], 0.1, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
         this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
+        this.draw = (0, gpufunctions_js_1.createDrawFunction)(size);
         this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
         this.render(this.lastFrame);
+        document.addEventListener('contextmenu', event => event.preventDefault());
         const canvas = this.render.canvas;
         (_a = document.getElementById('lenia-container')) === null || _a === void 0 ? void 0 : _a.appendChild(canvas);
+        canvas.onmousedown = (e) => {
+            this.mousePressed = true;
+            let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
+            let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
+            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+        };
+        canvas.onmousemove = (e) => {
+            if (!this.mousePressed)
+                return;
+            let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
+            let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
+            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+        };
+        canvas.onmouseup = (e) => {
+            this.mousePressed = false;
+        };
         this.addEventListeners();
         this.drawGrowthCurve();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;

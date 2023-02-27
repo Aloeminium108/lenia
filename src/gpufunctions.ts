@@ -68,4 +68,25 @@ function createRenderFunction(matrixSize: number) {
     
 }
 
-export { createUpdateFunction, createRenderFunction, growthFunction }
+function createDrawFunction(matrixSize: number) {
+
+    const draw = gpu.createKernel(function (
+        matrix: number[][], 
+        x: number,
+        y: number,
+        radius: number,
+        brush: number
+    ) {
+        const distX = x - this.thread.y
+        const distY = y - this.thread.x
+        const distance = Math.sqrt(distX ** 2 + distY ** 2)
+
+        return distance <= radius ? brush : matrix[this.thread.y][this.thread.x]
+
+    }).setOutput([matrixSize, matrixSize])
+
+    return draw
+   
+}
+
+export { createUpdateFunction, createRenderFunction, growthFunction, createDrawFunction }
