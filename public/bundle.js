@@ -31761,11 +31761,15 @@ class Lenia {
             let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
             this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
         };
-        canvas.onmouseup = (e) => {
+        canvas.onmouseup = () => {
             this.mousePressed = false;
         };
-        canvas.onmouseleave = (e) => {
+        canvas.onmouseleave = () => {
             this.mousePressed = false;
+        };
+        canvas.onmouseenter = (e) => {
+            if (e.buttons === 1 || e.buttons === 2)
+                this.mousePressed = true;
         };
         this.addEventListeners();
         this.drawGrowthCurve();
