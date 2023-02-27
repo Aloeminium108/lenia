@@ -154,17 +154,17 @@ class Lenia {
 
     private addEventListeners = () => {
 
-        document.getElementById('growth-center')?.addEventListener('change', (e) => {
+        document.getElementById('growth-center')?.addEventListener('input', (e) => {
             this.growthCenter = parseFloat((e.target as HTMLInputElement).value)
             this.drawGrowthCurve()
         })
 
-        document.getElementById('growth-width')?.addEventListener('change', (e) => {
+        document.getElementById('growth-width')?.addEventListener('input', (e) => {
             this.growthWidth = parseFloat((e.target as HTMLInputElement).value)
             this.drawGrowthCurve()
         })
 
-        document.getElementById('delta')?.addEventListener('change', (e) => {
+        document.getElementById('delta')?.addEventListener('input', (e) => {
             this.dt = parseFloat((e.target as HTMLInputElement).value) ** 2
         })
 

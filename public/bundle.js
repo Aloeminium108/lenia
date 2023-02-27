@@ -31721,15 +31721,15 @@ class Lenia {
         };
         this.addEventListeners = () => {
             var _a, _b, _c, _d, _e;
-            (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('change', (e) => {
+            (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('input', (e) => {
                 this.growthCenter = parseFloat(e.target.value);
                 this.drawGrowthCurve();
             });
-            (_b = document.getElementById('growth-width')) === null || _b === void 0 ? void 0 : _b.addEventListener('change', (e) => {
+            (_b = document.getElementById('growth-width')) === null || _b === void 0 ? void 0 : _b.addEventListener('input', (e) => {
                 this.growthWidth = parseFloat(e.target.value);
                 this.drawGrowthCurve();
             });
-            (_c = document.getElementById('delta')) === null || _c === void 0 ? void 0 : _c.addEventListener('change', (e) => {
+            (_c = document.getElementById('delta')) === null || _c === void 0 ? void 0 : _c.addEventListener('input', (e) => {
                 this.dt = Math.pow(parseFloat(e.target.value), 2);
             });
             (_d = document.getElementById('scramble')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
