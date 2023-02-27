@@ -1,4 +1,4 @@
-import { IKernelRunShortcut, Texture } from "gpu.js"
+import { IKernelRunShortcut, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
 import { createRenderFunction, createUpdateFunction, growthFunction } from "./gpufunctions.js"
 import { FunctionShape, generateKernel } from "./kernel.js"
@@ -117,6 +117,11 @@ class Lenia {
             this.growthWidth = parseFloat((e.target as HTMLInputElement).value)
             this.drawGrowthCurve()
         })
+
+        document.getElementById('delta')?.addEventListener('change', (e) => {
+            this.dt = parseFloat((e.target as HTMLInputElement).value)
+        })
+
     }
 
 }

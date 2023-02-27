@@ -31652,6 +31652,7 @@ exports.FunctionShape = FunctionShape;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
+const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const framecounter_js_1 = require("./framecounter.js");
 const gpufunctions_js_1 = require("./gpufunctions.js");
 const kernel_js_1 = require("./kernel.js");
@@ -31663,12 +31664,13 @@ class Lenia {
         this.growthWidth = growthWidth;
         this.dt = 0.05;
         this.animate = () => {
-            var _a, _b;
+            var _a;
             const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
             this.render(frame);
-            (_a = this.lastFrame) === null || _a === void 0 ? void 0 : _a.delete();
+            if (this.lastFrame instanceof index_js_1.Texture)
+                this.lastFrame.delete();
             this.lastFrame = frame;
-            (_b = this.frameCounter) === null || _b === void 0 ? void 0 : _b.countFrame();
+            (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
             requestAnimationFrame(this.animate);
         };
         this.randomize = (size) => {
@@ -31696,7 +31698,7 @@ class Lenia {
             }
         };
         this.addEventListeners = () => {
-            var _a, _b;
+            var _a, _b, _c;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('change', (e) => {
                 this.growthCenter = parseFloat(e.target.value);
                 this.drawGrowthCurve();
@@ -31705,27 +31707,28 @@ class Lenia {
                 this.growthWidth = parseFloat(e.target.value);
                 this.drawGrowthCurve();
             });
+            (_c = document.getElementById('delta')) === null || _c === void 0 ? void 0 : _c.addEventListener('change', (e) => {
+                this.dt = parseFloat(e.target.value);
+            });
         };
-        this.points = this.randomize(size);
+        this.lastFrame = this.randomize(size);
         this.kernel = (0, kernel_js_1.generateKernel)([1, 0.7, 0.3], 0.2, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
         this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
         this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
-        this.render(this.points);
+        this.render(this.lastFrame);
         const canvas = this.render.canvas;
         (_a = document.getElementById('lenia-container')) === null || _a === void 0 ? void 0 : _a.appendChild(canvas);
         canvas.addEventListener('dblclick', (e) => {
-            this.points = this.randomize(size);
-            this.lastFrame = this.update(this.points, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
+            this.lastFrame = this.randomize(size);
         });
         this.addEventListeners();
-        this.lastFrame = this.update(this.points, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
         this.drawGrowthCurve();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }
 exports.Lenia = Lenia;
 
-},{"./framecounter.js":161,"./gpufunctions.js":162,"./kernel.js":163}],165:[function(require,module,exports){
+},{"./framecounter.js":161,"./gpufunctions.js":162,"./kernel.js":163,"/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js":155}],165:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");

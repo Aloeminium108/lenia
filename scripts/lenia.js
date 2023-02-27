@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
-const gpu_js_1 = require("gpu.js");
+const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const framecounter_js_1 = require("./framecounter.js");
 const gpufunctions_js_1 = require("./gpufunctions.js");
 const kernel_js_1 = require("./kernel.js");
@@ -16,7 +16,7 @@ class Lenia {
             var _a;
             const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
             this.render(frame);
-            if (this.lastFrame instanceof gpu_js_1.Texture)
+            if (this.lastFrame instanceof index_js_1.Texture)
                 this.lastFrame.delete();
             this.lastFrame = frame;
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
@@ -47,7 +47,7 @@ class Lenia {
             }
         };
         this.addEventListeners = () => {
-            var _a, _b;
+            var _a, _b, _c;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('change', (e) => {
                 this.growthCenter = parseFloat(e.target.value);
                 this.drawGrowthCurve();
@@ -55,6 +55,9 @@ class Lenia {
             (_b = document.getElementById('growth-width')) === null || _b === void 0 ? void 0 : _b.addEventListener('change', (e) => {
                 this.growthWidth = parseFloat(e.target.value);
                 this.drawGrowthCurve();
+            });
+            (_c = document.getElementById('delta')) === null || _c === void 0 ? void 0 : _c.addEventListener('change', (e) => {
+                this.dt = parseFloat(e.target.value);
             });
         };
         this.lastFrame = this.randomize(size);
