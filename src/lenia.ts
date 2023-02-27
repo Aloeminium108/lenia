@@ -1,7 +1,7 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
 import { createDrawFunction, createRenderFunction, createUpdateFunction, growthFunction } from "./gpufunctions.js"
-import { FunctionShape, generateKernel } from "./kernel.js"
+import { generateKernel } from "./kernel.js"
 
 class Lenia {
 
@@ -29,7 +29,7 @@ class Lenia {
 
         this.lastFrame = this.randomize(size)
 
-        this.kernel = generateKernel([1, 0.7, 0.3], 0.1, 20, FunctionShape.POLYNOMIAL)
+        this.kernel = generateKernel([0.3, 0.1, 0.6], 16, 20)
 
         this.update = createUpdateFunction(size)
         this.draw = createDrawFunction(size)
@@ -161,16 +161,19 @@ class Lenia {
 
     private addEventListeners = () => {
 
+        document.getElementById('growth-center')?.addEventListener('wheel', enableScrollWheel)
         document.getElementById('growth-center')?.addEventListener('input', (e) => {
             this.growthCenter = parseFloat((e.target as HTMLInputElement).value)
             this.drawGrowthCurve()
         })
 
+        document.getElementById('growth-width')?.addEventListener('wheel', enableScrollWheel)
         document.getElementById('growth-width')?.addEventListener('input', (e) => {
             this.growthWidth = parseFloat((e.target as HTMLInputElement).value)
             this.drawGrowthCurve()
         })
 
+        document.getElementById('delta')?.addEventListener('wheel', enableScrollWheel)
         document.getElementById('delta')?.addEventListener('input', (e) => {
             this.dt = parseFloat((e.target as HTMLInputElement).value) ** 2
         })
@@ -185,6 +188,20 @@ class Lenia {
         
     }
 
+}
+
+function enableScrollWheel(e: WheelEvent) {
+    if (e.deltaY < 0) {
+        (e.target as HTMLInputElement).stepUp()
+    } else {
+        (e.target as HTMLInputElement).stepDown()
+    }
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    const event = new Event('input', {bubbles: true, cancelable: true})
+    e.target?.dispatchEvent(event)
 }
 
 export { Lenia }

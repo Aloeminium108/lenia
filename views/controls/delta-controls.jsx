@@ -5,7 +5,7 @@ function DeltaControls () {
         <div>
             <div>
                 <label htmlFor="delta">delta-T</label>
-                <input type="range" id="delta" name="delta" min="0" max="1" defaultValue="0.224" step="0.001" />
+                <input type="range" id="delta" name="delta" min="0" max="1" defaultValue="0.225" step="0.005" />
             </div>
         </ div>
     )

@@ -60,39 +60,33 @@ class Lenia {
                     ctx.lineTo(x, y);
                 }
                 ctx.stroke();
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(0, (canvas.height / 2) - (-canvas.height / 2.5));
-                for (let x = 0; x < canvas.width; x++) {
-                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, gpufunctions_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
-                    ctx.lineTo(x, y);
-                }
-                ctx.stroke();
             }
         };
         this.addEventListeners = () => {
-            var _a, _b, _c, _d, _e;
-            (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('input', (e) => {
+            var _a, _b, _c, _d, _e, _f, _g, _h;
+            (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('wheel', enableScrollWheel);
+            (_b = document.getElementById('growth-center')) === null || _b === void 0 ? void 0 : _b.addEventListener('input', (e) => {
                 this.growthCenter = parseFloat(e.target.value);
                 this.drawGrowthCurve();
             });
-            (_b = document.getElementById('growth-width')) === null || _b === void 0 ? void 0 : _b.addEventListener('input', (e) => {
+            (_c = document.getElementById('growth-width')) === null || _c === void 0 ? void 0 : _c.addEventListener('wheel', enableScrollWheel);
+            (_d = document.getElementById('growth-width')) === null || _d === void 0 ? void 0 : _d.addEventListener('input', (e) => {
                 this.growthWidth = parseFloat(e.target.value);
                 this.drawGrowthCurve();
             });
-            (_c = document.getElementById('delta')) === null || _c === void 0 ? void 0 : _c.addEventListener('input', (e) => {
+            (_e = document.getElementById('delta')) === null || _e === void 0 ? void 0 : _e.addEventListener('wheel', enableScrollWheel);
+            (_f = document.getElementById('delta')) === null || _f === void 0 ? void 0 : _f.addEventListener('input', (e) => {
                 this.dt = Math.pow(parseFloat(e.target.value), 2);
             });
-            (_d = document.getElementById('scramble')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
+            (_g = document.getElementById('scramble')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', () => {
                 this.lastFrame = this.randomize(this.size);
             });
-            (_e = document.getElementById('clear')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
+            (_h = document.getElementById('clear')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', () => {
                 this.lastFrame = this.clearField(this.size);
             });
         };
         this.lastFrame = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([1, 0.7, 0.3], 0.1, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
+        this.kernel = (0, kernel_js_1.generateKernel)([0.3, 0.1, 0.6], 16, 20);
         this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
         this.draw = (0, gpufunctions_js_1.createDrawFunction)(size);
         this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
@@ -129,3 +123,16 @@ class Lenia {
     }
 }
 exports.Lenia = Lenia;
+function enableScrollWheel(e) {
+    var _a;
+    if (e.deltaY < 0) {
+        e.target.stepUp();
+    }
+    else {
+        e.target.stepDown();
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    const event = new Event('input', { bubbles: true, cancelable: true });
+    (_a = e.target) === null || _a === void 0 ? void 0 : _a.dispatchEvent(event);
+}

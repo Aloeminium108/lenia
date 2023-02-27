@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FunctionShape = exports.generateKernel = void 0;
-function generateKernel(betas, coreWidth, radius, shape) {
+exports.generateKernel = void 0;
+function generateKernel(betas, coreWidth, radius) {
     const b_rank = betas.length - 1;
-    const kernel_core = generateCore(coreWidth, shape);
+    const kernel_core = (distance) => {
+        return Math.pow((4 * distance * (1 - distance)), coreWidth);
+    };
     const kernelSkeleton = (distance) => {
         let beta = betas[Math.floor(distance * b_rank)];
         return beta * kernel_core((distance * (b_rank + 1)) % 1);
@@ -22,20 +24,6 @@ function generateKernel(betas, coreWidth, radius, shape) {
     return points;
 }
 exports.generateKernel = generateKernel;
-function generateCore(coreWidth, shape) {
-    switch (shape) {
-        case FunctionShape.RECTANGLE:
-        case FunctionShape.POLYNOMIAL:
-            const alpha = 4;
-            return (distance) => {
-                return Math.pow((4 * distance * (1 - distance)), alpha);
-            };
-        default:
-            return (value) => {
-                return Math.abs(value - 0.5) < coreWidth ? 1 : 0;
-            };
-    }
-}
 function normalize(kernel) {
     let sum = 0;
     for (let x = 0; x < kernel.length; x++) {
@@ -49,10 +37,3 @@ function normalize(kernel) {
         }
     }
 }
-var FunctionShape;
-(function (FunctionShape) {
-    FunctionShape[FunctionShape["RECTANGLE"] = 0] = "RECTANGLE";
-    FunctionShape[FunctionShape["POLYNOMIAL"] = 1] = "POLYNOMIAL";
-    FunctionShape[FunctionShape["EXPONENTIAL"] = 2] = "EXPONENTIAL";
-})(FunctionShape || (FunctionShape = {}));
-exports.FunctionShape = FunctionShape;
