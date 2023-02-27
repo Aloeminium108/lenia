@@ -63,6 +63,10 @@ class Lenia {
         canvas.onmouseup = (e) => {
             this.mousePressed = false
         }
+
+        canvas.onmouseleave = (e) => {
+            this.mousePressed = false
+        }
         
         this.addEventListeners()
 
@@ -110,6 +114,19 @@ class Lenia {
 
     }
 
+    clearField = (size: number) => {
+        let points: number[][] = []
+
+        for(let i = 0; i < size; i++) {
+            points[i] = [];
+            for(let j = 0; j < size; j++) {
+                points[i][j] = 0
+            }
+        }
+
+        return points
+    }
+
     private drawGrowthCurve = () => {
         const canvas = document.getElementById('growth-curve') as HTMLCanvasElement
 
@@ -149,6 +166,10 @@ class Lenia {
 
         document.getElementById('scramble')?.addEventListener('click', () => {
             this.lastFrame = this.randomize(this.size)
+        })
+
+        document.getElementById('clear')?.addEventListener('click', () => {
+            this.lastFrame = this.clearField(this.size)
         })
         
     }

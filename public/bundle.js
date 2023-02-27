@@ -31696,6 +31696,16 @@ class Lenia {
             }
             return points;
         };
+        this.clearField = (size) => {
+            let points = [];
+            for (let i = 0; i < size; i++) {
+                points[i] = [];
+                for (let j = 0; j < size; j++) {
+                    points[i][j] = 0;
+                }
+            }
+            return points;
+        };
         this.drawGrowthCurve = () => {
             const canvas = document.getElementById('growth-curve');
             canvas.width = 1000;
@@ -31710,7 +31720,7 @@ class Lenia {
             }
         };
         this.addEventListeners = () => {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('change', (e) => {
                 this.growthCenter = parseFloat(e.target.value);
                 this.drawGrowthCurve();
@@ -31724,6 +31734,9 @@ class Lenia {
             });
             (_d = document.getElementById('scramble')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
                 this.lastFrame = this.randomize(this.size);
+            });
+            (_e = document.getElementById('clear')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
+                this.lastFrame = this.clearField(this.size);
             });
         };
         this.lastFrame = this.randomize(size);
@@ -31749,6 +31762,9 @@ class Lenia {
             this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
         };
         canvas.onmouseup = (e) => {
+            this.mousePressed = false;
+        };
+        canvas.onmouseleave = (e) => {
             this.mousePressed = false;
         };
         this.addEventListeners();
