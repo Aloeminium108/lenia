@@ -5,6 +5,7 @@ const GrowthControl = require('./controls/growth-controls')
 const DeltaControls = require('./controls/delta-controls')
 const ResetButton = require('./controls/reset-button')
 const ClearButton = require('./controls/clear-button')
+const BrushSize = require('./controls/brush-size')
 
 function home () {
     return (
@@ -18,6 +19,7 @@ function home () {
             <Lenia />
             
             <div className='control-panel'>
+                <BrushSize />
                 <ResetButton />
                 <ClearButton />
             </div>

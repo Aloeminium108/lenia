@@ -13,7 +13,7 @@ class Lenia {
         this.growthWidth = growthWidth;
         this.dt = 0.05;
         this.mousePressed = false;
-        this.brushSize = 15;
+        this.brushSize = 10;
         this.animate = () => {
             var _a;
             const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
@@ -63,7 +63,7 @@ class Lenia {
             }
         };
         this.addEventListeners = () => {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('wheel', enableScrollWheel);
             (_b = document.getElementById('growth-center')) === null || _b === void 0 ? void 0 : _b.addEventListener('input', (e) => {
                 this.growthCenter = parseFloat(e.target.value);
@@ -78,10 +78,14 @@ class Lenia {
             (_f = document.getElementById('delta')) === null || _f === void 0 ? void 0 : _f.addEventListener('input', (e) => {
                 this.dt = Math.pow(parseFloat(e.target.value), 2);
             });
-            (_g = document.getElementById('scramble')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', () => {
+            (_g = document.getElementById('brush-size')) === null || _g === void 0 ? void 0 : _g.addEventListener('wheel', enableScrollWheel);
+            (_h = document.getElementById('brush-size')) === null || _h === void 0 ? void 0 : _h.addEventListener('input', (e) => {
+                this.brushSize = parseFloat(e.target.value);
+            });
+            (_j = document.getElementById('scramble')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
                 this.lastFrame = this.randomize(this.size);
             });
-            (_h = document.getElementById('clear')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', () => {
+            (_k = document.getElementById('clear')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
                 this.lastFrame = this.clearField(this.size);
             });
         };

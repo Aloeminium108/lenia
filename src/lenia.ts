@@ -8,7 +8,7 @@ class Lenia {
     dt: number = 0.05
 
     mousePressed: boolean = false
-    brushSize: number = 15
+    brushSize: number = 10
 
     kernel: number[][]
 
@@ -176,6 +176,11 @@ class Lenia {
         document.getElementById('delta')?.addEventListener('wheel', enableScrollWheel)
         document.getElementById('delta')?.addEventListener('input', (e) => {
             this.dt = parseFloat((e.target as HTMLInputElement).value) ** 2
+        })
+
+        document.getElementById('brush-size')?.addEventListener('wheel', enableScrollWheel)
+        document.getElementById('brush-size')?.addEventListener('input', (e) => {
+            this.brushSize = parseFloat((e.target as HTMLInputElement).value)
         })
 
         document.getElementById('scramble')?.addEventListener('click', () => {
