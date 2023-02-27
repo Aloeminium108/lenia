@@ -15,7 +15,7 @@ class Lenia {
         this.animate = () => {
             var _a;
             const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
-            this.render(frame);
+            this.render(this.lastFrame);
             if (this.lastFrame instanceof index_js_1.Texture)
                 this.lastFrame.delete();
             this.lastFrame = frame;
@@ -47,7 +47,7 @@ class Lenia {
             }
         };
         this.addEventListeners = () => {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('change', (e) => {
                 this.growthCenter = parseFloat(e.target.value);
                 this.drawGrowthCurve();
@@ -59,6 +59,9 @@ class Lenia {
             (_c = document.getElementById('delta')) === null || _c === void 0 ? void 0 : _c.addEventListener('change', (e) => {
                 this.dt = Math.pow(parseFloat(e.target.value), 2);
             });
+            (_d = document.getElementById('scramble')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
+                this.lastFrame = this.randomize(this.size);
+            });
         };
         this.lastFrame = this.randomize(size);
         this.kernel = (0, kernel_js_1.generateKernel)([1, 0.7, 0.3], 0.2, 20, kernel_js_1.FunctionShape.POLYNOMIAL);
@@ -67,9 +70,6 @@ class Lenia {
         this.render(this.lastFrame);
         const canvas = this.render.canvas;
         (_a = document.getElementById('lenia-container')) === null || _a === void 0 ? void 0 : _a.appendChild(canvas);
-        canvas.addEventListener('dblclick', (e) => {
-            this.lastFrame = this.randomize(size);
-        });
         this.addEventListeners();
         this.drawGrowthCurve();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;

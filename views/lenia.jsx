@@ -4,7 +4,6 @@ function Lenia () {
     return (
         <>
             <div id='lenia-container'></div>
-            <script src="./bundle.js"></script>
         </>
     )
 }  

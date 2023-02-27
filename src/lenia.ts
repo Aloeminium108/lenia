@@ -34,10 +34,6 @@ class Lenia {
 
         const canvas = this.render.canvas as HTMLCanvasElement
         document.getElementById('lenia-container')?.appendChild(canvas)
-
-        canvas.addEventListener('dblclick', (e) => {
-            this.lastFrame = this.randomize(size)
-        })
         
         this.addEventListeners()
 
@@ -59,7 +55,7 @@ class Lenia {
             this.growthWidth
         ) as Texture
 
-        this.render(frame)
+        this.render(this.lastFrame)
         
         if (this.lastFrame instanceof Texture) this.lastFrame.delete()
         this.lastFrame = frame
@@ -122,6 +118,10 @@ class Lenia {
             this.dt = parseFloat((e.target as HTMLInputElement).value) ** 2
         })
 
+        document.getElementById('scramble')?.addEventListener('click', () => {
+            this.lastFrame = this.randomize(this.size)
+        })
+        
     }
 
 }

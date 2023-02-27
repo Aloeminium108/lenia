@@ -3,6 +3,7 @@ const Def = require('./default')
 const Lenia = require('./lenia')
 const GrowthControl = require('./controls/growth-controls')
 const DeltaControls = require('./controls/delta-controls')
+const ResetButton = require('./controls/reset-button')
 
 function home () {
     return (
@@ -16,9 +17,10 @@ function home () {
             <Lenia />
             
             <div className='control-panel'>
-
+                <ResetButton />
             </div>
 
+            <script src="./bundle.js"></script>
          </Def>
     )
 }  
