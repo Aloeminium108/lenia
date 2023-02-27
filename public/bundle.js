@@ -31712,11 +31712,24 @@ class Lenia {
             canvas.height = 100;
             if (canvas) {
                 const ctx = canvas.getContext('2d');
-                ctx.fillStyle = 'orange';
+                ctx.strokeStyle = 'orange';
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.moveTo(0, (canvas.height / 2) - (-canvas.height / 2.5));
                 for (let x = 0; x < canvas.width; x++) {
                     const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, gpufunctions_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
-                    ctx.fillRect(x, y, 2, 2);
+                    ctx.lineTo(x, y);
                 }
+                ctx.stroke();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, (canvas.height / 2) - (-canvas.height / 2.5));
+                for (let x = 0; x < canvas.width; x++) {
+                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, gpufunctions_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
             }
         };
         this.addEventListeners = () => {
