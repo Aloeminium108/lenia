@@ -1,10 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
-const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const framecounter_js_1 = require("./framecounter.js");
-const gpufunctions_js_1 = require("./gpufunctions.js");
-const kernel_js_1 = require("./kernel.js");
+const fftpipeline_js_1 = require("./fftpipeline.js");
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
         var _a;
@@ -16,34 +14,16 @@ class Lenia {
         this.brushSize = 10;
         this.animate = () => {
             var _a;
-            const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
-            this.render(frame);
-            if (this.lastFrame instanceof index_js_1.Texture)
+            if (this.frameCounter.frameCount < 3) {
+                let frame = this.convolve(this.lastFrame, this.kernel);
+                frame = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt);
+                frame = this.pointwiseAdd(frame, this.lastFrame);
                 this.lastFrame.delete();
-            this.lastFrame = frame;
+                this.lastFrame = frame;
+                this.render(this.lastFrame);
+            }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
             requestAnimationFrame(this.animate);
-        };
-        this.randomize = (size) => {
-            let points = [];
-            for (let i = 0; i < size; i++) {
-                points[i] = [];
-                for (let j = 0; j < size; j++) {
-                    const rand = Math.random();
-                    points[i][j] = rand;
-                }
-            }
-            return points;
-        };
-        this.clearField = (size) => {
-            let points = [];
-            for (let i = 0; i < size; i++) {
-                points[i] = [];
-                for (let j = 0; j < size; j++) {
-                    points[i][j] = 0;
-                }
-            }
-            return points;
         };
         this.drawGrowthCurve = () => {
             const canvas = document.getElementById('growth-curve');
@@ -56,30 +36,10 @@ class Lenia {
                 ctx.beginPath();
                 ctx.moveTo(0, (canvas.height / 2) - (-canvas.height / 2.5));
                 for (let x = 0; x < canvas.width; x++) {
-                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, gpufunctions_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
+                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, fftpipeline_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
                     ctx.lineTo(x, y);
                 }
                 ctx.stroke();
-            }
-        };
-        this.drawKernel = () => {
-            const canvas = document.getElementById('kernel-display');
-            canvas.width = this.kernel.length;
-            canvas.height = this.kernel.length;
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                const kernelImage = ctx.createImageData(this.kernel.length, this.kernel.length);
-                const epsilon = 0.001;
-                for (let x = 0; x < this.kernel.length; x++) {
-                    for (let y = 0; y < this.kernel.length; y++) {
-                        const index = (x + (y * this.kernel.length)) * 4;
-                        kernelImage.data[index] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 1] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 2] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 3] = 255;
-                    }
-                }
-                ctx.putImageData(kernelImage, 0, 0);
             }
         };
         this.addEventListeners = () => {
@@ -103,19 +63,71 @@ class Lenia {
                 this.brushSize = parseFloat(e.target.value);
             });
             (_j = document.getElementById('scramble')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
-                this.lastFrame = this.randomize(this.size);
+                this.lastFrame = this.randomize();
             });
             (_k = document.getElementById('clear')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
-                this.lastFrame = this.clearField(this.size);
+                this.lastFrame = this.clear();
             });
         };
-        this.lastFrame = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([0.3, 0.6], 4, 20);
-        this.kernelScale = (0, kernel_js_1.findScale)(this.kernel);
-        this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
-        this.draw = (0, gpufunctions_js_1.createDrawFunction)(size);
-        this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
-        this.render(this.lastFrame);
+        this.findNormalization = (kernel) => {
+            let sum = 0;
+            for (let y = 0; y < kernel.length; y++) {
+                for (let x = 0; x < kernel.length; x++) {
+                    sum += kernel[y][x][0];
+                }
+            }
+            return 1 / sum;
+        };
+        this.fft2d = (matrix) => {
+            let texture = this.bitReverseVertical(matrix);
+            for (let n = 2; n <= this.size; n *= 2) {
+                texture = this.FFTPassVertical(texture, n);
+            }
+            texture = this.bitReverseHorizontal(texture);
+            for (let n = 2; n <= this.size; n *= 2) {
+                texture = (this.FFTPassHorizontal(texture, n));
+            }
+            return texture;
+        };
+        this.invfft2d = (matrix) => {
+            let texture = matrix;
+            for (let n = this.size; n >= 2; n /= 2) {
+                texture = this.invFFTPassHorizontal(texture, n);
+            }
+            texture = this.bitReverseHorizontal(texture);
+            for (let n = this.size; n >= 2; n /= 2) {
+                texture = this.invFFTPassVertical(texture, n);
+            }
+            texture = this.bitReverseVertical(texture);
+            return texture;
+        };
+        this.convolve = (matrix, kernel) => {
+            let texture = this.fft2d(matrix);
+            texture = this.pointwiseMul(texture, kernel);
+            texture = this.invfft2d(texture);
+            return texture;
+        };
+        const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
+        this.FFTPassVertical = FFTPassVertical;
+        this.FFTPassHorizontal = FFTPassHorizontal;
+        this.invFFTPassVertical = invFFTPassVertical;
+        this.invFFTPassHorizontal = invFFTPassHorizontal;
+        const { bitReverseVertical, bitReverseHorizontal } = (0, fftpipeline_js_1.createBitReverse)(size);
+        this.bitReverseVertical = bitReverseVertical;
+        this.bitReverseHorizontal = bitReverseHorizontal;
+        this.pointwiseAdd = (0, fftpipeline_js_1.createPointwiseAdd)(size);
+        this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
+        this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
+        this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
+        this.render = (0, fftpipeline_js_1.createRender)(size);
+        this.draw = (0, fftpipeline_js_1.createDraw)(size);
+        this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
+        this.clear = (0, fftpipeline_js_1.createClear)(size);
+        this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
+        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 0.1, 80);
+        const normalizationFactor = this.findNormalization(kernel.toArray());
+        this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
+        this.lastFrame = this.randomize();
         document.addEventListener('contextmenu', event => event.preventDefault());
         const canvas = this.render.canvas;
         (_a = document.getElementById('lenia-container')) === null || _a === void 0 ? void 0 : _a.appendChild(canvas);
@@ -144,8 +156,16 @@ class Lenia {
         };
         this.addEventListeners();
         this.drawGrowthCurve();
-        this.drawKernel();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
+        // Trying to figure out how in the hell pipeline and immutable work
+        const { test1, test2 } = (0, fftpipeline_js_1.createTestPipeline)(4);
+        test1([0, 1, 2, 3]);
+        console.log(test1.texture.toArray());
+        test1(test1.texture);
+        console.log(test1.texture.toArray());
+        test2(test1.texture);
+        console.log(test1.texture.toArray());
+        console.log(test2.texture.toArray());
     }
 }
 exports.Lenia = Lenia;
