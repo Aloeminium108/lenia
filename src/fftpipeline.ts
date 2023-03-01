@@ -303,6 +303,7 @@ function createDraw(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({ 
             matrix: 'Array2D(2)',
             x: 'Float',

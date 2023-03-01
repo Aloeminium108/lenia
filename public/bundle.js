@@ -21147,10 +21147,10 @@ class GLTexture extends Texture {
   delete() {
     if (this._deleted) return;
     this._deleted = true;
-    if (this.texture._refs) {
-      this.texture._refs--;
-      if (this.texture._refs) return;
-    }
+    // if (this.texture._refs) {
+    //   this.texture._refs--;
+    //   if (this.texture._refs) return;
+    // }
     this.context.deleteTexture(this.texture);
     // TODO: Remove me
     // if (this.texture._refs === 0 && this._framebuffer) {
@@ -31722,6 +31722,7 @@ function createDraw(matrixSize) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({
         matrix: 'Array2D(2)',
         x: 'Float',
@@ -31874,9 +31875,10 @@ class Lenia {
         this.dt = 0.05;
         this.mousePressed = false;
         this.brushSize = 10;
+        this.termSignal = false;
         this.animate = () => {
             var _a;
-            if (this.frameCounter.frameCount < 3) {
+            if (this.frameCounter.frameCount < 30) {
                 let frame = this.convolve(this.lastFrame, this.kernel);
                 frame = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt);
                 frame = this.pointwiseAdd(frame, this.lastFrame);
@@ -31885,7 +31887,9 @@ class Lenia {
                 this.render(this.lastFrame);
             }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
-            requestAnimationFrame(this.animate);
+            if (!this.termSignal) {
+                requestAnimationFrame(this.animate);
+            }
         };
         this.drawGrowthCurve = () => {
             const canvas = document.getElementById('growth-curve');
@@ -31997,14 +32001,18 @@ class Lenia {
             this.mousePressed = true;
             let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
             let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            this.lastFrame.delete();
+            this.lastFrame = newFrame;
         };
         canvas.onmousemove = (e) => {
             if (!this.mousePressed)
                 return;
             let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
             let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            this.lastFrame.delete();
+            this.lastFrame = newFrame;
         };
         canvas.onmouseup = () => {
             this.mousePressed = false;
@@ -32016,18 +32024,12 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2)
                 this.mousePressed = true;
         };
+        canvas.ondblclick = () => {
+            this.termSignal = true;
+        };
         this.addEventListeners();
         this.drawGrowthCurve();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
-        // Trying to figure out how in the hell pipeline and immutable work
-        const { test1, test2 } = (0, fftpipeline_js_1.createTestPipeline)(4);
-        test1([0, 1, 2, 3]);
-        console.log(test1.texture.toArray());
-        test1(test1.texture);
-        console.log(test1.texture.toArray());
-        test2(test1.texture);
-        console.log(test1.texture.toArray());
-        console.log(test2.texture.toArray());
     }
 }
 exports.Lenia = Lenia;
@@ -32051,6 +32053,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");
 const SPACE_SIZE = 512;
 const lenia = new lenia_js_1.Lenia(SPACE_SIZE, 0.15, 0.02, true);
-//lenia.animate()
+lenia.animate();
 
 },{"./lenia.js":163}]},{},[164]);

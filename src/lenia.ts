@@ -1,6 +1,6 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
-import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, createTestPipeline, growthFunction } from './fftpipeline.js'
+import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, growthFunction } from './fftpipeline.js'
 
 class Lenia {
 
@@ -14,6 +14,8 @@ class Lenia {
     lastFrame: Texture
 
     frameCounter?: FrameCounter
+
+    private termSignal: boolean = false
 
     private FFTPassVertical: IKernelRunShortcut
     private FFTPassHorizontal: IKernelRunShortcut
@@ -91,7 +93,9 @@ class Lenia {
             let x = Math.floor((e.offsetX / (e.target as HTMLElement).offsetWidth) * this.size)
             let y = Math.floor((e.offsetY / (e.target as HTMLElement).offsetHeight) * this.size)
 
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2) as Texture
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2) as Texture
+            this.lastFrame.delete()
+            this.lastFrame = newFrame
         }
 
         canvas.onmousemove = (e) => {
@@ -100,7 +104,9 @@ class Lenia {
             let x = Math.floor((e.offsetX / (e.target as HTMLElement).offsetWidth) * this.size)
             let y = Math.floor((e.offsetY / (e.target as HTMLElement).offsetHeight) * this.size)
 
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2) as Texture
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2) as Texture
+            this.lastFrame.delete()
+            this.lastFrame = newFrame
         }
 
         canvas.onmouseup = () => {
@@ -115,26 +121,20 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2) this.mousePressed = true
         }
 
+        canvas.ondblclick = () => {
+            this.termSignal = true
+        }
+
         this.addEventListeners()
 
         this.drawGrowthCurve()
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
-        // Trying to figure out how in the hell pipeline and immutable work
-        const { test1, test2 } = createTestPipeline(4)
-        test1([0, 1, 2, 3])
-        console.log(test1.texture.toArray())
-        test1(test1.texture)
-        console.log(test1.texture.toArray())
-        test2(test1.texture)
-        console.log(test1.texture.toArray())
-        console.log(test2.texture.toArray())
-
     }
 
     animate = () => {
-        if (this.frameCounter!!.frameCount < 3) {
+        if (this.frameCounter!!.frameCount < 30) {
 
             let frame = this.convolve(this.lastFrame, this.kernel)
             
@@ -151,7 +151,10 @@ class Lenia {
 
         this.frameCounter?.countFrame()
 
-        requestAnimationFrame(this.animate)
+        if (!this.termSignal) {
+            requestAnimationFrame(this.animate)
+        }
+
     }
 
     private drawGrowthCurve = () => {
