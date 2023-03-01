@@ -83,7 +83,10 @@ function createDrawFunction(matrixSize: number) {
 
         return distance <= radius ? brush : matrix[this.thread.y][this.thread.x]
 
-    }).setOutput([matrixSize, matrixSize])
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
 
     return draw
    

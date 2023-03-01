@@ -21147,10 +21147,10 @@ class GLTexture extends Texture {
   delete() {
     if (this._deleted) return;
     this._deleted = true;
-    if (this.texture._refs) {
-      this.texture._refs--;
-      if (this.texture._refs) return;
-    }
+    // if (this.texture._refs) {
+    //   this.texture._refs--;
+    //   if (this.texture._refs) return;
+    // }
     this.context.deleteTexture(this.texture);
     // TODO: Remove me
     // if (this.texture._refs === 0 && this._framebuffer) {
@@ -31593,7 +31593,10 @@ function createDrawFunction(matrixSize) {
         const distY = y - this.thread.x;
         const distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
         return distance <= radius ? brush : matrix[this.thread.y][this.thread.x];
-    }).setOutput([matrixSize, matrixSize]);
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true);
     return draw;
 }
 exports.createDrawFunction = createDrawFunction;

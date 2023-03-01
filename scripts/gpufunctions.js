@@ -51,7 +51,10 @@ function createDrawFunction(matrixSize) {
         const distY = y - this.thread.x;
         const distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
         return distance <= radius ? brush : matrix[this.thread.y][this.thread.x];
-    }).setOutput([matrixSize, matrixSize]);
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true);
     return draw;
 }
 exports.createDrawFunction = createDrawFunction;
