@@ -134,7 +134,7 @@ class Lenia {
     }
 
     animate = () => {
-        if (this.frameCounter!!.frameCount < 30) {
+        if (this.frameCounter!!.frameCount < 2) {
 
             let frame = this.convolve(this.lastFrame, this.kernel)
             
@@ -144,6 +144,11 @@ class Lenia {
 
             this.lastFrame.delete()
             this.lastFrame = frame
+
+            this.FFTPassHorizontal.texture.delete()
+            this.FFTPassVertical.texture.delete()
+            this.invFFTPassHorizontal.texture.delete()
+            this.invFFTPassVertical.texture.delete()
 
             this.render(this.lastFrame)
 
@@ -238,13 +243,17 @@ class Lenia {
         let texture = this.bitReverseVertical(matrix) as Texture
 
         for (let n = 2; n <= this.size; n *= 2) {
-            texture = this.FFTPassVertical(texture, n) as Texture
+            let pass = this.FFTPassVertical(texture, n) as Texture
+            texture = pass.clone()
+            pass.delete()
         }
 
         texture = this.bitReverseHorizontal(texture) as Texture
 
         for (let n = 2; n <= this.size; n *= 2) {
-            texture = (this.FFTPassHorizontal(texture, n)) as Texture
+            let pass = (this.FFTPassHorizontal(texture, n)) as Texture
+            texture = pass.clone()
+            pass.delete()
         }
 
         return texture as Texture
@@ -256,13 +265,17 @@ class Lenia {
         let texture = matrix
 
         for (let n = this.size; n >= 2; n /= 2) {
-            texture = this.invFFTPassHorizontal(texture, n) as Texture
+            let pass = this.invFFTPassHorizontal(texture, n) as Texture
+            texture = pass.clone()
+            pass.delete()
         }
 
         texture = this.bitReverseHorizontal(texture) as Texture
 
         for (let n = this.size; n >= 2; n /= 2) {
-            texture = this.invFFTPassVertical(texture, n) as Texture
+            let pass = this.invFFTPassVertical(texture, n) as Texture
+            texture = pass.clone()
+            pass.delete()
         }
 
         texture = this.bitReverseVertical(texture) as Texture

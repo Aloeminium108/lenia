@@ -15,12 +15,16 @@ class Lenia {
         this.termSignal = false;
         this.animate = () => {
             var _a;
-            if (this.frameCounter.frameCount < 30) {
+            if (this.frameCounter.frameCount < 2) {
                 let frame = this.convolve(this.lastFrame, this.kernel);
                 frame = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt);
                 frame = this.pointwiseAdd(frame, this.lastFrame);
                 this.lastFrame.delete();
                 this.lastFrame = frame;
+                this.FFTPassHorizontal.texture.delete();
+                this.FFTPassVertical.texture.delete();
+                this.invFFTPassHorizontal.texture.delete();
+                this.invFFTPassVertical.texture.delete();
                 this.render(this.lastFrame);
             }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
@@ -84,22 +88,30 @@ class Lenia {
         this.fft2d = (matrix) => {
             let texture = this.bitReverseVertical(matrix);
             for (let n = 2; n <= this.size; n *= 2) {
-                texture = this.FFTPassVertical(texture, n);
+                let pass = this.FFTPassVertical(texture, n);
+                texture = pass.clone();
+                pass.delete();
             }
             texture = this.bitReverseHorizontal(texture);
             for (let n = 2; n <= this.size; n *= 2) {
-                texture = (this.FFTPassHorizontal(texture, n));
+                let pass = (this.FFTPassHorizontal(texture, n));
+                texture = pass.clone();
+                pass.delete();
             }
             return texture;
         };
         this.invfft2d = (matrix) => {
             let texture = matrix;
             for (let n = this.size; n >= 2; n /= 2) {
-                texture = this.invFFTPassHorizontal(texture, n);
+                let pass = this.invFFTPassHorizontal(texture, n);
+                texture = pass.clone();
+                pass.delete();
             }
             texture = this.bitReverseHorizontal(texture);
             for (let n = this.size; n >= 2; n /= 2) {
-                texture = this.invFFTPassVertical(texture, n);
+                let pass = this.invFFTPassVertical(texture, n);
+                texture = pass.clone();
+                pass.delete();
             }
             texture = this.bitReverseVertical(texture);
             return texture;
