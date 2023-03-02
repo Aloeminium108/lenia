@@ -32,14 +32,12 @@ class Lenia {
             let pass;
             let texture = this.bitReverseVertical(matrix);
             for (let n = 2; n <= this.size; n *= 2) {
-                pass = texture;
-                texture = this.FFTPassVertical(texture, n);
+                texture = this.FFTPassVertical(pass = texture, n);
                 pass.delete();
             }
             texture = this.bitReverseHorizontal(texture);
             for (let n = 2; n <= this.size; n *= 2) {
-                pass = texture;
-                texture = (this.FFTPassHorizontal(texture, n));
+                texture = (this.FFTPassHorizontal(pass = texture, n));
                 pass.delete();
             }
             return texture;
@@ -48,14 +46,12 @@ class Lenia {
             let pass;
             let texture = matrix;
             for (let n = this.size; n >= 2; n /= 2) {
-                pass = texture;
-                texture = this.invFFTPassHorizontal(texture, n);
+                texture = this.invFFTPassHorizontal(pass = texture, n);
                 pass.delete();
             }
             texture = this.bitReverseHorizontal(texture);
             for (let n = this.size; n >= 2; n /= 2) {
-                pass = texture;
-                texture = this.invFFTPassVertical(texture, n);
+                texture = this.invFFTPassVertical(pass = texture, n);
                 pass.delete();
             }
             texture = this.bitReverseVertical(texture);
