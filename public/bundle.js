@@ -16275,7 +16275,7 @@ module.exports = {
 };
 },{"../../utils":160}],55:[function(require,module,exports){
 const { Kernel } = require('../kernel');
-const { FunctionBuilder } = require('../function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { CPUFunctionNode } = require('./function-node');
 const { utils } = require('../../utils');
 const { cpuKernelString } = require('./kernel-string');
@@ -16947,7 +16947,7 @@ class CPUKernel extends Kernel {
 module.exports = {
   CPUKernel
 };
-},{"../../utils":160,"../function-builder":56,"../kernel":83,"./function-node":53,"./kernel-string":54}],56:[function(require,module,exports){
+},{"../../utils":160,"../kernel":83,"./function-node":53,"./kernel-string":54,"gpu.js/src/backend/function-builder":56}],56:[function(require,module,exports){
 /**
  * @desc This handles all the raw state, converted state, etc. of a single function.
  * [INTERNAL] A collection of functionNodes.
@@ -25950,7 +25950,7 @@ module.exports = {
 };
 },{"../../../utils":160,"./array":87}],117:[function(require,module,exports){
 const { GLKernel } = require('../gl/kernel');
-const { FunctionBuilder } = require('../function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { WebGLFunctionNode } = require('./function-node');
 const { utils } = require('../../utils');
 const mrud = require('../../plugins/math-random-uniformly-distributed');
@@ -27556,7 +27556,7 @@ float integerCorrectionModulo(float number, float divisor) {
 module.exports = {
   WebGLKernel
 };
-},{"../../plugins/math-random-uniformly-distributed":158,"../../utils":160,"../function-builder":56,"../gl/kernel":60,"../gl/kernel-string":59,"./fragment-shader":84,"./function-node":85,"./kernel-value-maps":86,"./vertex-shader":118}],118:[function(require,module,exports){
+},{"../../plugins/math-random-uniformly-distributed":158,"../../utils":160,"../gl/kernel":60,"../gl/kernel-string":59,"./fragment-shader":84,"./function-node":85,"./kernel-value-maps":86,"./vertex-shader":118,"gpu.js/src/backend/function-builder":56}],118:[function(require,module,exports){
 // language=GLSL
 const vertexShader = `__FLOAT_TACTIC_DECLARATION__;
 __INT_TACTIC_DECLARATION__;
@@ -28912,7 +28912,7 @@ module.exports = {
 },{"../../../utils":160,"../../web-gl/kernel-value/unsigned-input":116}],152:[function(require,module,exports){
 const { WebGLKernel } = require('../web-gl/kernel');
 const { WebGL2FunctionNode } = require('./function-node');
-const { FunctionBuilder } = require('../function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { utils } = require('../../utils');
 const { fragmentShader } = require('./fragment-shader');
 const { vertexShader } = require('./vertex-shader');
@@ -29551,7 +29551,7 @@ class WebGL2Kernel extends WebGLKernel {
 module.exports = {
   WebGL2Kernel
 };
-},{"../../utils":160,"../function-builder":56,"../web-gl/kernel":117,"./fragment-shader":119,"./function-node":120,"./kernel-value-maps":121,"./vertex-shader":153}],153:[function(require,module,exports){
+},{"../../utils":160,"../web-gl/kernel":117,"./fragment-shader":119,"./function-node":120,"./kernel-value-maps":121,"./vertex-shader":153,"gpu.js/src/backend/function-builder":56}],153:[function(require,module,exports){
 // language=GLSL
 const vertexShader = `#version 300 es
 __FLOAT_TACTIC_DECLARATION__;
@@ -30184,7 +30184,7 @@ const { alias } = require('./alias');
 const { utils } = require('./utils');
 const { Input, input } = require('./input');
 const { Texture } = require('./texture');
-const { FunctionBuilder } = require('./backend/function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { FunctionNode } = require('./backend/function-node');
 const { CPUFunctionNode } = require('./backend/cpu/function-node');
 const { CPUKernel } = require('./backend/cpu/kernel');
@@ -30236,7 +30236,7 @@ module.exports = {
     mathRandom
   }
 };
-},{"./alias":52,"./backend/cpu/function-node":53,"./backend/cpu/kernel":55,"./backend/function-builder":56,"./backend/function-node":57,"./backend/function-tracer":58,"./backend/gl/kernel":60,"./backend/headless-gl/kernel":81,"./backend/kernel":83,"./backend/web-gl/function-node":85,"./backend/web-gl/kernel":117,"./backend/web-gl/kernel-value-maps":86,"./backend/web-gl2/function-node":120,"./backend/web-gl2/kernel":152,"./backend/web-gl2/kernel-value-maps":121,"./gpu":154,"./input":156,"./plugins/math-random-uniformly-distributed":158,"./texture":159,"./utils":160}],156:[function(require,module,exports){
+},{"./alias":52,"./backend/cpu/function-node":53,"./backend/cpu/kernel":55,"./backend/function-node":57,"./backend/function-tracer":58,"./backend/gl/kernel":60,"./backend/headless-gl/kernel":81,"./backend/kernel":83,"./backend/web-gl/function-node":85,"./backend/web-gl/kernel":117,"./backend/web-gl/kernel-value-maps":86,"./backend/web-gl2/function-node":120,"./backend/web-gl2/kernel":152,"./backend/web-gl2/kernel-value-maps":121,"./gpu":154,"./input":156,"./plugins/math-random-uniformly-distributed":158,"./texture":159,"./utils":160,"gpu.js/src/backend/function-builder":56}],156:[function(require,module,exports){
 class Input {
   constructor(value, size) {
     this.value = value;
@@ -31884,16 +31884,51 @@ class Lenia {
                 frame = this.pointwiseAdd(frame, this.lastFrame);
                 this.lastFrame.delete();
                 this.lastFrame = frame;
-                this.FFTPassHorizontal.texture.delete();
-                this.FFTPassVertical.texture.delete();
-                this.invFFTPassHorizontal.texture.delete();
-                this.invFFTPassVertical.texture.delete();
                 this.render(this.lastFrame);
             }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
             if (!this.termSignal) {
                 requestAnimationFrame(this.animate);
             }
+        };
+        this.fft2d = (matrix) => {
+            let pass;
+            let texture = this.bitReverseVertical(matrix);
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = texture;
+                texture = this.FFTPassVertical(texture, n);
+                pass.delete();
+            }
+            texture = this.bitReverseHorizontal(texture);
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = texture;
+                texture = (this.FFTPassHorizontal(texture, n));
+                pass.delete();
+            }
+            return texture;
+        };
+        this.invfft2d = (matrix) => {
+            let pass;
+            let texture = matrix;
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = texture;
+                texture = this.invFFTPassHorizontal(texture, n);
+                pass.delete();
+            }
+            texture = this.bitReverseHorizontal(texture);
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = texture;
+                texture = this.invFFTPassVertical(texture, n);
+                pass.delete();
+            }
+            texture = this.bitReverseVertical(texture);
+            return texture;
+        };
+        this.convolve = (matrix, kernel) => {
+            let texture = this.fft2d(matrix);
+            texture = this.pointwiseMul(texture, kernel);
+            texture = this.invfft2d(texture);
+            return texture;
         };
         this.drawGrowthCurve = () => {
             const canvas = document.getElementById('growth-curve');
@@ -31947,43 +31982,6 @@ class Lenia {
                 }
             }
             return 1 / sum;
-        };
-        this.fft2d = (matrix) => {
-            let texture = this.bitReverseVertical(matrix);
-            for (let n = 2; n <= this.size; n *= 2) {
-                let pass = this.FFTPassVertical(texture, n);
-                texture = pass.clone();
-                pass.delete();
-            }
-            texture = this.bitReverseHorizontal(texture);
-            for (let n = 2; n <= this.size; n *= 2) {
-                let pass = (this.FFTPassHorizontal(texture, n));
-                texture = pass.clone();
-                pass.delete();
-            }
-            return texture;
-        };
-        this.invfft2d = (matrix) => {
-            let texture = matrix;
-            for (let n = this.size; n >= 2; n /= 2) {
-                let pass = this.invFFTPassHorizontal(texture, n);
-                texture = pass.clone();
-                pass.delete();
-            }
-            texture = this.bitReverseHorizontal(texture);
-            for (let n = this.size; n >= 2; n /= 2) {
-                let pass = this.invFFTPassVertical(texture, n);
-                texture = pass.clone();
-                pass.delete();
-            }
-            texture = this.bitReverseVertical(texture);
-            return texture;
-        };
-        this.convolve = (matrix, kernel) => {
-            let texture = this.fft2d(matrix);
-            texture = this.pointwiseMul(texture, kernel);
-            texture = this.invfft2d(texture);
-            return texture;
         };
         const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
         this.FFTPassVertical = FFTPassVertical;

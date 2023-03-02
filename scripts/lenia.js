@@ -21,16 +21,51 @@ class Lenia {
                 frame = this.pointwiseAdd(frame, this.lastFrame);
                 this.lastFrame.delete();
                 this.lastFrame = frame;
-                this.FFTPassHorizontal.texture.delete();
-                this.FFTPassVertical.texture.delete();
-                this.invFFTPassHorizontal.texture.delete();
-                this.invFFTPassVertical.texture.delete();
                 this.render(this.lastFrame);
             }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
             if (!this.termSignal) {
                 requestAnimationFrame(this.animate);
             }
+        };
+        this.fft2d = (matrix) => {
+            let pass;
+            let texture = this.bitReverseVertical(matrix);
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = texture;
+                texture = this.FFTPassVertical(texture, n);
+                pass.delete();
+            }
+            texture = this.bitReverseHorizontal(texture);
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = texture;
+                texture = (this.FFTPassHorizontal(texture, n));
+                pass.delete();
+            }
+            return texture;
+        };
+        this.invfft2d = (matrix) => {
+            let pass;
+            let texture = matrix;
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = texture;
+                texture = this.invFFTPassHorizontal(texture, n);
+                pass.delete();
+            }
+            texture = this.bitReverseHorizontal(texture);
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = texture;
+                texture = this.invFFTPassVertical(texture, n);
+                pass.delete();
+            }
+            texture = this.bitReverseVertical(texture);
+            return texture;
+        };
+        this.convolve = (matrix, kernel) => {
+            let texture = this.fft2d(matrix);
+            texture = this.pointwiseMul(texture, kernel);
+            texture = this.invfft2d(texture);
+            return texture;
         };
         this.drawGrowthCurve = () => {
             const canvas = document.getElementById('growth-curve');
@@ -84,43 +119,6 @@ class Lenia {
                 }
             }
             return 1 / sum;
-        };
-        this.fft2d = (matrix) => {
-            let texture = this.bitReverseVertical(matrix);
-            for (let n = 2; n <= this.size; n *= 2) {
-                let pass = this.FFTPassVertical(texture, n);
-                texture = pass.clone();
-                pass.delete();
-            }
-            texture = this.bitReverseHorizontal(texture);
-            for (let n = 2; n <= this.size; n *= 2) {
-                let pass = (this.FFTPassHorizontal(texture, n));
-                texture = pass.clone();
-                pass.delete();
-            }
-            return texture;
-        };
-        this.invfft2d = (matrix) => {
-            let texture = matrix;
-            for (let n = this.size; n >= 2; n /= 2) {
-                let pass = this.invFFTPassHorizontal(texture, n);
-                texture = pass.clone();
-                pass.delete();
-            }
-            texture = this.bitReverseHorizontal(texture);
-            for (let n = this.size; n >= 2; n /= 2) {
-                let pass = this.invFFTPassVertical(texture, n);
-                texture = pass.clone();
-                pass.delete();
-            }
-            texture = this.bitReverseVertical(texture);
-            return texture;
-        };
-        this.convolve = (matrix, kernel) => {
-            let texture = this.fft2d(matrix);
-            texture = this.pointwiseMul(texture, kernel);
-            texture = this.invfft2d(texture);
-            return texture;
         };
         const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
         this.FFTPassVertical = FFTPassVertical;
