@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.growthFunction = exports.createTestPipeline = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createBitReverse = void 0;
+exports.ctx = exports.growthFunction = exports.createTestPipeline = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createBitReverse = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('webgl2');
+exports.ctx = ctx;
 const gpu = new index_js_1.GPU({ canvas: canvas, context: ctx });
 gpu.addFunction(kernel_core);
 gpu.addFunction(growthFunction);
@@ -161,6 +162,7 @@ function createMatrixMul(matrixSize) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({ matrix: 'Array2D(2)', x: 'Float' });
     return matrixMul;
 }
@@ -175,6 +177,7 @@ function createApplyGrowth(matrixSize) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({
         matrix: 'Array2D(2)',
         center: 'Float',
@@ -240,7 +243,8 @@ function createRandomize(matrixSize) {
         return [rand, 0];
     })
         .setOutput([matrixSize, matrixSize])
-        .setPipeline(true);
+        .setPipeline(true)
+        .setImmutable(true);
     return randomize;
 }
 exports.createRandomize = createRandomize;

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
 const fftpipeline_js_1 = require("./fftpipeline.js");
+const ext = fftpipeline_js_1.ctx.getExtension('GMAN_webgl_memory');
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
         var _a;
@@ -15,13 +16,20 @@ class Lenia {
         this.termSignal = false;
         this.animate = () => {
             var _a;
-            if (this.frameCounter.frameCount < 60) {
-                let frame = this.convolve(this.lastFrame, this.kernel);
-                frame = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt);
-                frame = this.pointwiseAdd(frame, this.lastFrame);
-                this.lastFrame.delete();
-                this.lastFrame = frame;
-                this.render(this.lastFrame);
+            let pass;
+            let frame = this.convolve(this.lastFrame, this.kernel);
+            pass = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt);
+            frame.delete();
+            frame = pass;
+            pass = this.pointwiseAdd(frame, this.lastFrame);
+            frame.delete();
+            frame = pass;
+            this.lastFrame.delete();
+            this.lastFrame = frame;
+            this.render(this.lastFrame);
+            if (ext) {
+                const info = ext.getMemoryInfo();
+                console.log("this.lastFrame rendered:", info.resources.texture);
             }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
             if (!this.termSignal) {
@@ -119,6 +127,7 @@ class Lenia {
                 this.brushSize = parseFloat(e.target.value);
             });
             (_j = document.getElementById('scramble')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
+                this.lastFrame.delete();
                 this.lastFrame = this.randomize();
             });
             (_k = document.getElementById('clear')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {

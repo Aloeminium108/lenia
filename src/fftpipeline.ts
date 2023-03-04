@@ -241,6 +241,7 @@ function createMatrixMul(matrixSize: number) {
     })        
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({ matrix: 'Array2D(2)', x: 'Float' })
 
     return matrixMul
@@ -262,6 +263,7 @@ function createApplyGrowth(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({ 
             matrix: 'Array2D(2)', 
             center: 'Float', 
@@ -357,6 +359,7 @@ function createRandomize(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
 
     return randomize
 
@@ -473,5 +476,6 @@ export {
     createRandomize,
     createClear,
     createTestPipeline,
-    growthFunction
+    growthFunction,
+    ctx
 }

@@ -1,6 +1,8 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
-import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, growthFunction } from './fftpipeline.js'
+import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction } from './fftpipeline.js'
+
+//const ext = ctx.getExtension('GMAN_webgl_memory')
 
 class Lenia {
 
@@ -135,16 +137,27 @@ class Lenia {
 
     animate = () => {
 
+        let pass: Texture
+
         let frame = this.convolve(this.lastFrame, this.kernel)
         
-        frame = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt) as Texture
+        pass = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt) as Texture
+        frame.delete()
+        frame = pass
         
-        frame = this.pointwiseAdd(frame, this.lastFrame) as Texture
+        pass = this.pointwiseAdd(frame, this.lastFrame) as Texture
+        frame.delete()
+        frame = pass
 
         this.lastFrame.delete()
         this.lastFrame = frame
 
         this.render(this.lastFrame)
+
+        // if (ext) {
+        //     const info = ext.getMemoryInfo()
+        //     console.log("this.lastFrame rendered:", info.resources.texture)
+        // }
 
         this.frameCounter?.countFrame()
 
@@ -281,6 +294,7 @@ class Lenia {
         })
 
         document.getElementById('scramble')?.addEventListener('click', () => {
+            this.lastFrame.delete()
             this.lastFrame = this.randomize() as Texture
         })
 
