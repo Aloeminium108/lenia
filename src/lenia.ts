@@ -134,20 +134,17 @@ class Lenia {
     }
 
     animate = () => {
-        if (this.frameCounter!!.frameCount < 2) {
 
-            let frame = this.convolve(this.lastFrame, this.kernel)
-            
-            frame = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt) as Texture
-            
-            frame = this.pointwiseAdd(frame, this.lastFrame) as Texture
+        let frame = this.convolve(this.lastFrame, this.kernel)
+        
+        frame = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt) as Texture
+        
+        frame = this.pointwiseAdd(frame, this.lastFrame) as Texture
 
-            this.lastFrame.delete()
-            this.lastFrame = frame
+        this.lastFrame.delete()
+        this.lastFrame = frame
 
-            this.render(this.lastFrame)
-
-        }
+        this.render(this.lastFrame)
 
         this.frameCounter?.countFrame()
 
@@ -160,7 +157,10 @@ class Lenia {
     private fft2d = (matrix: Texture) => {
 
         let pass: Texture
-        let texture = this.bitReverseVertical(matrix) as Texture
+        let texture = matrix.clone()
+        pass = this.bitReverseVertical(texture) as Texture
+        texture.delete()
+        texture = pass
 
         for (let n = 2; n <= this.size; n *= 2) {
             pass = this.FFTPassVertical(texture, n) as Texture
@@ -168,7 +168,9 @@ class Lenia {
             texture = pass
         }
 
-        texture = this.bitReverseHorizontal(texture) as Texture
+        pass = this.bitReverseHorizontal(texture) as Texture
+        texture.delete()
+        texture = pass
 
         for (let n = 2; n <= this.size; n *= 2) {
             pass = (this.FFTPassHorizontal(texture, n)) as Texture
@@ -186,18 +188,24 @@ class Lenia {
         let texture = matrix
 
         for (let n = this.size; n >= 2; n /= 2) {
-            texture = this.invFFTPassHorizontal(pass = texture, n) as Texture
-            pass.delete()
+            pass = this.invFFTPassHorizontal(texture, n) as Texture
+            texture.delete()
+            texture = pass
         }
 
-        texture = this.bitReverseHorizontal(texture) as Texture
+        pass = this.bitReverseHorizontal(texture) as Texture
+        texture.delete()
+        texture = pass
 
         for (let n = this.size; n >= 2; n /= 2) {
-            texture = this.invFFTPassVertical(pass = texture, n) as Texture
-            pass.delete()
+            pass = this.invFFTPassVertical(texture, n) as Texture
+            texture.delete()
+            texture = pass
         }
 
-        texture = this.bitReverseVertical(texture) as Texture
+        pass = this.bitReverseVertical(texture) as Texture
+        texture.delete()
+        texture = pass
 
         return texture
 
@@ -205,11 +213,16 @@ class Lenia {
 
     private convolve = (matrix: Texture, kernel: Texture) => {
 
+        let pass: Texture
         let texture = this.fft2d(matrix) as Texture
 
-        texture = this.pointwiseMul(texture, kernel) as Texture
+        pass = this.pointwiseMul(texture, kernel) as Texture
+        texture.delete()
+        texture = pass
 
-        //texture = this.invfft2d(texture) as Texture
+        pass = this.invfft2d(texture) as Texture
+        texture.delete()
+        texture = pass
 
         return texture
 

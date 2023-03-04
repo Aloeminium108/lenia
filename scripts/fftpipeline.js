@@ -24,6 +24,7 @@ function createBitReverse(matrixSize) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setConstants({ logN: Math.log2(matrixSize) })
         .setArgumentTypes({ matrix: 'Array2D(2)' });
     const bitReverseHorizontal = gpu.createKernel(function (matrix) {
@@ -33,6 +34,7 @@ function createBitReverse(matrixSize) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setConstants({ logN: Math.log2(matrixSize) })
         .setArgumentTypes({ matrix: 'Array2D(2)' });
     return { bitReverseVertical, bitReverseHorizontal };
@@ -148,6 +150,7 @@ function createPointwiseMul(matrixSize) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({ matrixA: 'Array2D(2)', matrixB: 'Array2D(2)' });
     return pointwiseMul;
 }

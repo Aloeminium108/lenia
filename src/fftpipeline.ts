@@ -28,6 +28,7 @@ function createBitReverse(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setConstants({ logN: Math.log2(matrixSize) })
         .setArgumentTypes({ matrix: 'Array2D(2)' })
 
@@ -41,6 +42,7 @@ function createBitReverse(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setConstants({ logN: Math.log2(matrixSize) })
         .setArgumentTypes({ matrix: 'Array2D(2)' })
 
@@ -222,6 +224,7 @@ function createPointwiseMul(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setArgumentTypes({ matrixA: 'Array2D(2)', matrixB: 'Array2D(2)' })
     
     return pointwiseMul
