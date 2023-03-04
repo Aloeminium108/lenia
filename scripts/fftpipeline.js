@@ -234,7 +234,7 @@ function createGenerateKernel(matrixSize) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
-        .setConstants({ halfPoint: matrixSize / 2 });
+        .setConstants({ halfPoint: (matrixSize / 2) });
     return generateKernel;
 }
 exports.createGenerateKernel = createGenerateKernel;

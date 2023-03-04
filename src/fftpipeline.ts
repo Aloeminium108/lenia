@@ -346,7 +346,7 @@ function createGenerateKernel(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
-        .setConstants({ halfPoint: matrixSize / 2 })
+        .setConstants({ halfPoint: (matrixSize / 2) })
 
     return generateKernel
 
