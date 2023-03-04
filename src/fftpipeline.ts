@@ -407,6 +407,7 @@ function createClear(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
 
     return clear
 

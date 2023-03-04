@@ -285,7 +285,8 @@ function createClear(matrixSize) {
         return [0, 0];
     })
         .setOutput([matrixSize, matrixSize])
-        .setPipeline(true);
+        .setPipeline(true)
+        .setImmutable(true);
     return clear;
 }
 exports.createClear = createClear;

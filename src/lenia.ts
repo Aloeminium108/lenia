@@ -308,6 +308,7 @@ class Lenia {
         })
 
         document.getElementById('clear')?.addEventListener('click', () => {
+            this.lastFrame.delete()
             this.lastFrame = this.clear() as Texture
         })
         

@@ -134,6 +134,7 @@ class Lenia {
                 this.lastFrame = this.randomize();
             });
             (_k = document.getElementById('clear')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
+                this.lastFrame.delete();
                 this.lastFrame = this.clear();
             });
         };

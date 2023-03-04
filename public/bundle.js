@@ -21147,10 +21147,10 @@ class GLTexture extends Texture {
   delete() {
     if (this._deleted) return;
     this._deleted = true;
-    // if (this.texture._refs) {
-    //   this.texture._refs--;
-    //   if (this.texture._refs) return;
-    // }
+    if (this.texture._refs) {
+      this.texture._refs--;
+      if (this.texture._refs) return;
+    }
     this.context.deleteTexture(this.texture);
     // TODO: Remove me
     // if (this.texture._refs === 0 && this._framebuffer) {
@@ -31806,7 +31806,8 @@ function createClear(matrixSize) {
         return [0, 0];
     })
         .setOutput([matrixSize, matrixSize])
-        .setPipeline(true);
+        .setPipeline(true)
+        .setImmutable(true);
     return clear;
 }
 exports.createClear = createClear;
@@ -32020,6 +32021,7 @@ class Lenia {
                 this.lastFrame = this.randomize();
             });
             (_k = document.getElementById('clear')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
+                this.lastFrame.delete();
                 this.lastFrame = this.clear();
             });
         };
