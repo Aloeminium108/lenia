@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
-const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const framecounter_js_1 = require("./framecounter.js");
-const gpufunctions_js_1 = require("./gpufunctions.js");
-const kernel_js_1 = require("./kernel.js");
+const fftpipeline_js_1 = require("./fftpipeline.js");
+//const ext = ctx.getExtension('GMAN_webgl_memory')
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
         var _a;
@@ -14,36 +13,84 @@ class Lenia {
         this.dt = 0.05;
         this.mousePressed = false;
         this.brushSize = 10;
+        this.termSignal = false;
         this.animate = () => {
             var _a;
-            const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
-            this.render(frame);
-            if (this.lastFrame instanceof index_js_1.Texture)
-                this.lastFrame.delete();
+            let pass;
+            let frame = this.convolve(this.lastFrame, this.kernel);
+            pass = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt);
+            frame.delete();
+            frame = pass;
+            pass = this.pointwiseAdd(frame, this.lastFrame);
+            frame.delete();
+            frame = pass;
+            this.lastFrame.delete();
             this.lastFrame = frame;
+            this.render(this.lastFrame);
+            // if (ext) {
+            //     const info = ext.getMemoryInfo()
+            //     console.log("this.lastFrame rendered:", info.resources.texture)
+            // }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
-            requestAnimationFrame(this.animate);
-        };
-        this.randomize = (size) => {
-            let points = [];
-            for (let i = 0; i < size; i++) {
-                points[i] = [];
-                for (let j = 0; j < size; j++) {
-                    const rand = Math.random();
-                    points[i][j] = rand;
-                }
+            if (!this.termSignal) {
+                requestAnimationFrame(this.animate);
             }
-            return points;
         };
-        this.clearField = (size) => {
-            let points = [];
-            for (let i = 0; i < size; i++) {
-                points[i] = [];
-                for (let j = 0; j < size; j++) {
-                    points[i][j] = 0;
-                }
+        this.fft2d = (matrix) => {
+            let pass;
+            let texture = matrix.clone();
+            pass = this.bitReverseVertical(texture);
+            texture.delete();
+            texture = pass;
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = this.FFTPassVertical(texture, n);
+                texture.delete();
+                texture = pass;
             }
-            return points;
+            pass = this.bitReverseHorizontal(texture);
+            texture.delete();
+            texture = pass;
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = (this.FFTPassHorizontal(texture, n));
+                texture.delete();
+                texture = pass;
+            }
+            return texture;
+        };
+        this.invfft2d = (matrix) => {
+            let pass;
+            let texture = matrix;
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = this.invFFTPassHorizontal(texture, n);
+                texture.delete();
+                texture = pass;
+            }
+            pass = this.bitReverseHorizontal(texture);
+            texture.delete();
+            texture = pass;
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = this.invFFTPassVertical(texture, n);
+                texture.delete();
+                texture = pass;
+            }
+            pass = this.bitReverseVertical(texture);
+            texture.delete();
+            texture = pass;
+            return texture;
+        };
+        this.convolve = (matrix, kernel) => {
+            let pass;
+            let texture = this.FFTShift(matrix);
+            pass = this.fft2d(texture);
+            texture.delete();
+            texture = pass;
+            pass = this.pointwiseMul(texture, kernel);
+            texture.delete();
+            texture = pass;
+            pass = this.invfft2d(texture);
+            texture.delete();
+            texture = pass;
+            return texture;
         };
         this.drawGrowthCurve = () => {
             const canvas = document.getElementById('growth-curve');
@@ -56,30 +103,10 @@ class Lenia {
                 ctx.beginPath();
                 ctx.moveTo(0, (canvas.height / 2) - (-canvas.height / 2.5));
                 for (let x = 0; x < canvas.width; x++) {
-                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, gpufunctions_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
+                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, fftpipeline_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
                     ctx.lineTo(x, y);
                 }
                 ctx.stroke();
-            }
-        };
-        this.drawKernel = () => {
-            const canvas = document.getElementById('kernel-display');
-            canvas.width = this.kernel.length;
-            canvas.height = this.kernel.length;
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                const kernelImage = ctx.createImageData(this.kernel.length, this.kernel.length);
-                const epsilon = 0.001;
-                for (let x = 0; x < this.kernel.length; x++) {
-                    for (let y = 0; y < this.kernel.length; y++) {
-                        const index = (x + (y * this.kernel.length)) * 4;
-                        kernelImage.data[index] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 1] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 2] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 3] = 255;
-                    }
-                }
-                ctx.putImageData(kernelImage, 0, 0);
             }
         };
         this.addEventListeners = () => {
@@ -103,19 +130,44 @@ class Lenia {
                 this.brushSize = parseFloat(e.target.value);
             });
             (_j = document.getElementById('scramble')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
-                this.lastFrame = this.randomize(this.size);
+                this.lastFrame.delete();
+                this.lastFrame = this.randomize();
             });
             (_k = document.getElementById('clear')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
-                this.lastFrame = this.clearField(this.size);
+                this.lastFrame = this.clear();
             });
         };
-        this.lastFrame = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([0.3, 0.6], 4, 20);
-        this.kernelScale = (0, kernel_js_1.findScale)(this.kernel);
-        this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
-        this.draw = (0, gpufunctions_js_1.createDrawFunction)(size);
-        this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
-        this.render(this.lastFrame);
+        this.findNormalization = (kernel) => {
+            let sum = 0;
+            for (let y = 0; y < kernel.length; y++) {
+                for (let x = 0; x < kernel.length; x++) {
+                    sum += kernel[y][x][0];
+                }
+            }
+            return 1 / sum;
+        };
+        const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
+        this.FFTPassVertical = FFTPassVertical;
+        this.FFTPassHorizontal = FFTPassHorizontal;
+        this.invFFTPassVertical = invFFTPassVertical;
+        this.invFFTPassHorizontal = invFFTPassHorizontal;
+        const { bitReverseVertical, bitReverseHorizontal } = (0, fftpipeline_js_1.createBitReverse)(size);
+        this.bitReverseVertical = bitReverseVertical;
+        this.bitReverseHorizontal = bitReverseHorizontal;
+        this.FFTShift = (0, fftpipeline_js_1.createFFTShift)(size);
+        this.pointwiseAdd = (0, fftpipeline_js_1.createPointwiseAdd)(size);
+        this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
+        this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
+        this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
+        this.render = (0, fftpipeline_js_1.createRender)(size);
+        this.draw = (0, fftpipeline_js_1.createDraw)(size);
+        this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
+        this.clear = (0, fftpipeline_js_1.createClear)(size);
+        this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
+        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 40);
+        const normalizationFactor = this.findNormalization(kernel.toArray());
+        this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
+        this.lastFrame = this.randomize();
         document.addEventListener('contextmenu', event => event.preventDefault());
         const canvas = this.render.canvas;
         (_a = document.getElementById('lenia-container')) === null || _a === void 0 ? void 0 : _a.appendChild(canvas);
@@ -123,14 +175,18 @@ class Lenia {
             this.mousePressed = true;
             let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
             let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            this.lastFrame.delete();
+            this.lastFrame = newFrame;
         };
         canvas.onmousemove = (e) => {
             if (!this.mousePressed)
                 return;
             let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
             let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            this.lastFrame.delete();
+            this.lastFrame = newFrame;
         };
         canvas.onmouseup = () => {
             this.mousePressed = false;
@@ -142,9 +198,11 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2)
                 this.mousePressed = true;
         };
+        // canvas.ondblclick = () => {
+        //     this.termSignal = true
+        // }
         this.addEventListeners();
         this.drawGrowthCurve();
-        this.drawKernel();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }

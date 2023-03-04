@@ -16275,7 +16275,7 @@ module.exports = {
 };
 },{"../../utils":160}],55:[function(require,module,exports){
 const { Kernel } = require('../kernel');
-const { FunctionBuilder } = require('../function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { CPUFunctionNode } = require('./function-node');
 const { utils } = require('../../utils');
 const { cpuKernelString } = require('./kernel-string');
@@ -16947,7 +16947,7 @@ class CPUKernel extends Kernel {
 module.exports = {
   CPUKernel
 };
-},{"../../utils":160,"../function-builder":56,"../kernel":83,"./function-node":53,"./kernel-string":54}],56:[function(require,module,exports){
+},{"../../utils":160,"../kernel":83,"./function-node":53,"./kernel-string":54,"gpu.js/src/backend/function-builder":56}],56:[function(require,module,exports){
 /**
  * @desc This handles all the raw state, converted state, etc. of a single function.
  * [INTERNAL] A collection of functionNodes.
@@ -25950,7 +25950,7 @@ module.exports = {
 };
 },{"../../../utils":160,"./array":87}],117:[function(require,module,exports){
 const { GLKernel } = require('../gl/kernel');
-const { FunctionBuilder } = require('../function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { WebGLFunctionNode } = require('./function-node');
 const { utils } = require('../../utils');
 const mrud = require('../../plugins/math-random-uniformly-distributed');
@@ -27556,7 +27556,7 @@ float integerCorrectionModulo(float number, float divisor) {
 module.exports = {
   WebGLKernel
 };
-},{"../../plugins/math-random-uniformly-distributed":158,"../../utils":160,"../function-builder":56,"../gl/kernel":60,"../gl/kernel-string":59,"./fragment-shader":84,"./function-node":85,"./kernel-value-maps":86,"./vertex-shader":118}],118:[function(require,module,exports){
+},{"../../plugins/math-random-uniformly-distributed":158,"../../utils":160,"../gl/kernel":60,"../gl/kernel-string":59,"./fragment-shader":84,"./function-node":85,"./kernel-value-maps":86,"./vertex-shader":118,"gpu.js/src/backend/function-builder":56}],118:[function(require,module,exports){
 // language=GLSL
 const vertexShader = `__FLOAT_TACTIC_DECLARATION__;
 __INT_TACTIC_DECLARATION__;
@@ -28912,7 +28912,7 @@ module.exports = {
 },{"../../../utils":160,"../../web-gl/kernel-value/unsigned-input":116}],152:[function(require,module,exports){
 const { WebGLKernel } = require('../web-gl/kernel');
 const { WebGL2FunctionNode } = require('./function-node');
-const { FunctionBuilder } = require('../function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { utils } = require('../../utils');
 const { fragmentShader } = require('./fragment-shader');
 const { vertexShader } = require('./vertex-shader');
@@ -29551,7 +29551,7 @@ class WebGL2Kernel extends WebGLKernel {
 module.exports = {
   WebGL2Kernel
 };
-},{"../../utils":160,"../function-builder":56,"../web-gl/kernel":117,"./fragment-shader":119,"./function-node":120,"./kernel-value-maps":121,"./vertex-shader":153}],153:[function(require,module,exports){
+},{"../../utils":160,"../web-gl/kernel":117,"./fragment-shader":119,"./function-node":120,"./kernel-value-maps":121,"./vertex-shader":153,"gpu.js/src/backend/function-builder":56}],153:[function(require,module,exports){
 // language=GLSL
 const vertexShader = `#version 300 es
 __FLOAT_TACTIC_DECLARATION__;
@@ -30184,7 +30184,7 @@ const { alias } = require('./alias');
 const { utils } = require('./utils');
 const { Input, input } = require('./input');
 const { Texture } = require('./texture');
-const { FunctionBuilder } = require('./backend/function-builder');
+const { FunctionBuilder } = require('gpu.js/src/backend/function-builder');
 const { FunctionNode } = require('./backend/function-node');
 const { CPUFunctionNode } = require('./backend/cpu/function-node');
 const { CPUKernel } = require('./backend/cpu/kernel');
@@ -30236,7 +30236,7 @@ module.exports = {
     mathRandom
   }
 };
-},{"./alias":52,"./backend/cpu/function-node":53,"./backend/cpu/kernel":55,"./backend/function-builder":56,"./backend/function-node":57,"./backend/function-tracer":58,"./backend/gl/kernel":60,"./backend/headless-gl/kernel":81,"./backend/kernel":83,"./backend/web-gl/function-node":85,"./backend/web-gl/kernel":117,"./backend/web-gl/kernel-value-maps":86,"./backend/web-gl2/function-node":120,"./backend/web-gl2/kernel":152,"./backend/web-gl2/kernel-value-maps":121,"./gpu":154,"./input":156,"./plugins/math-random-uniformly-distributed":158,"./texture":159,"./utils":160}],156:[function(require,module,exports){
+},{"./alias":52,"./backend/cpu/function-node":53,"./backend/cpu/kernel":55,"./backend/function-node":57,"./backend/function-tracer":58,"./backend/gl/kernel":60,"./backend/headless-gl/kernel":81,"./backend/kernel":83,"./backend/web-gl/function-node":85,"./backend/web-gl/kernel":117,"./backend/web-gl/kernel-value-maps":86,"./backend/web-gl2/function-node":120,"./backend/web-gl2/kernel":152,"./backend/web-gl2/kernel-value-maps":121,"./gpu":154,"./input":156,"./plugins/math-random-uniformly-distributed":158,"./texture":159,"./utils":160,"gpu.js/src/backend/function-builder":56}],156:[function(require,module,exports){
 class Input {
   constructor(value, size) {
     this.value = value;
@@ -31521,6 +31521,350 @@ module.exports = {
 },{"./input":156,"./texture":159,"acorn":7}],161:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ctx = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
+const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('webgl2');
+exports.ctx = ctx;
+const gpu = new index_js_1.GPU({ canvas: canvas, context: ctx });
+gpu.addFunction(kernel_core);
+gpu.addFunction(growthFunction);
+gpu.addFunction(bitReverse);
+gpu.addFunction(complexAdd, { argumentTypes: { a: 'Array(2)', b: 'Array(2)' }, returnType: 'Array(2)' });
+gpu.addFunction(complexSub, { argumentTypes: { a: 'Array(2)', b: 'Array(2)' }, returnType: 'Array(2)' });
+gpu.addFunction(complexMul, { argumentTypes: { a: 'Array(2)', b: 'Array(2)' }, returnType: 'Array(2)' });
+gpu.addFunction(complexDiv, { argumentTypes: { a: 'Array(2)', b: 'Float' }, returnType: 'Array(2)' });
+gpu.addFunction(eulerExp, { argumentTypes: { x: 'Float' }, returnType: 'Array(2)' });
+function createBitReverse(matrixSize) {
+    if (Math.log2(matrixSize) % 1 > 0) {
+        throw new RangeError('Matrix size must be a power of 2');
+    }
+    const bitReverseVertical = gpu.createKernel(function (matrix) {
+        const index = bitReverse(this.thread.x, this.constants.logN);
+        const value = matrix[this.thread.y][index];
+        return [value[0], value[1]];
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ logN: Math.log2(matrixSize) })
+        .setArgumentTypes({ matrix: 'Array2D(2)' });
+    const bitReverseHorizontal = gpu.createKernel(function (matrix) {
+        const index = bitReverse(this.thread.y, this.constants.logN);
+        const value = matrix[index][this.thread.x];
+        return [value[0], value[1]];
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ logN: Math.log2(matrixSize) })
+        .setArgumentTypes({ matrix: 'Array2D(2)' });
+    return { bitReverseVertical, bitReverseHorizontal };
+}
+exports.createBitReverse = createBitReverse;
+function createFFTShift(matrixSize) {
+    const FFTShift = gpu.createKernel(function (matrix) {
+        if (this.thread.y >= this.constants.halfPoint) {
+            if (this.thread.x >= this.constants.halfPoint) {
+                // QUADRANT 1
+                return matrix[this.thread.y - this.constants.halfPoint][this.thread.x - this.constants.halfPoint];
+            }
+            else {
+                // QUADRANT 4
+                return matrix[this.thread.y - this.constants.halfPoint][this.thread.x + this.constants.halfPoint];
+            }
+        }
+        else {
+            if (this.thread.x >= this.constants.halfPoint) {
+                // QUADRANT 2
+                return matrix[this.thread.y + this.constants.halfPoint][this.thread.x - this.constants.halfPoint];
+            }
+            else {
+                // QUADRANT 3
+                return matrix[this.thread.y + this.constants.halfPoint][this.thread.x + this.constants.halfPoint];
+            }
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ halfPoint: matrixSize / 2 })
+        .setArgumentTypes({ matrix: 'Array2D(2)' });
+    return FFTShift;
+}
+exports.createFFTShift = createFFTShift;
+function createFFTPass(matrixSize) {
+    if (Math.log2(matrixSize) % 1 > 0) {
+        throw new RangeError('Matrix size must be a power of 2');
+    }
+    const FFTPassVertical = gpu.createKernel(function (matrix, pass) {
+        const halfPoint = pass >> 1;
+        if (this.thread.x % pass < halfPoint) {
+            const x0 = matrix[this.thread.y][this.thread.x];
+            const x1 = matrix[this.thread.y][this.thread.x + halfPoint];
+            const factor = eulerExp(this.constants.angle * (this.thread.x % pass) / pass);
+            const product = complexMul(x1, factor);
+            return complexAdd(x0, product);
+        }
+        else {
+            const x0 = matrix[this.thread.y][this.thread.x - halfPoint];
+            const x1 = matrix[this.thread.y][this.thread.x];
+            const factor = eulerExp(this.constants.angle * ((this.thread.x % pass) - halfPoint) / pass);
+            const product = complexMul(x1, factor);
+            return complexSub(x0, product);
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ angle: -2 * Math.PI })
+        .setArgumentTypes({ matrix: 'Array2D(2)', pass: 'Integer' });
+    const FFTPassHorizontal = gpu.createKernel(function (matrix, pass) {
+        const halfPoint = pass >> 1;
+        if (this.thread.y % pass < halfPoint) {
+            const x0 = matrix[this.thread.y][this.thread.x];
+            const x1 = matrix[this.thread.y + halfPoint][this.thread.x];
+            const factor = eulerExp(this.constants.angle * (this.thread.y % pass) / pass);
+            const product = complexMul(x1, factor);
+            return complexAdd(x0, product);
+        }
+        else {
+            const x0 = matrix[this.thread.y - halfPoint][this.thread.x];
+            const x1 = matrix[this.thread.y][this.thread.x];
+            const factor = eulerExp(this.constants.angle * ((this.thread.y % pass) - halfPoint) / pass);
+            const product = complexMul(x1, factor);
+            return complexSub(x0, product);
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ angle: -2 * Math.PI })
+        .setArgumentTypes({ matrix: 'Array2D(2)', pass: 'Integer' });
+    const invFFTPassVertical = gpu.createKernel(function (matrix, pass) {
+        const halfPoint = pass >> 1;
+        if (this.thread.x % pass < halfPoint) {
+            const y0 = matrix[this.thread.y][this.thread.x];
+            const y1 = matrix[this.thread.y][this.thread.x + halfPoint];
+            return complexDiv(complexAdd(y0, y1), 2);
+        }
+        else {
+            const y0 = matrix[this.thread.y][this.thread.x - halfPoint];
+            const y1 = matrix[this.thread.y][this.thread.x];
+            const factor = complexDiv(eulerExp(this.constants.angle * ((this.thread.x % pass) - halfPoint) / pass), 2);
+            return complexMul(factor, complexSub(y0, y1));
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ angle: 2 * Math.PI })
+        .setArgumentTypes({ matrix: 'Array2D(2)', pass: 'Integer' });
+    const invFFTPassHorizontal = gpu.createKernel(function (matrix, pass) {
+        const halfPoint = pass >> 1;
+        if (this.thread.y % pass < halfPoint) {
+            const y0 = matrix[this.thread.y][this.thread.x];
+            const y1 = matrix[this.thread.y + halfPoint][this.thread.x];
+            return complexDiv(complexAdd(y0, y1), 2);
+        }
+        else {
+            const y0 = matrix[this.thread.y - halfPoint][this.thread.x];
+            const y1 = matrix[this.thread.y][this.thread.x];
+            const factor = complexDiv(eulerExp(this.constants.angle * ((this.thread.y % pass) - halfPoint) / pass), 2);
+            return complexMul(factor, complexSub(y0, y1));
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ angle: 2 * Math.PI })
+        .setArgumentTypes({ matrix: 'Array2D(2)', pass: 'Integer' });
+    return { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal };
+}
+exports.createFFTPass = createFFTPass;
+function createPointwiseAdd(matrixSize) {
+    const pointwiseMul = gpu.createKernel(function (matrixA, matrixB) {
+        const value = complexAdd(matrixA[this.thread.y][this.thread.x], matrixB[this.thread.y][this.thread.x]);
+        return [
+            Math.min(Math.max(value[0], 0), 1),
+            0
+        ];
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setArgumentTypes({ matrixA: 'Array2D(2)', matrixB: 'Array2D(2)' });
+    return pointwiseMul;
+}
+exports.createPointwiseAdd = createPointwiseAdd;
+function createPointwiseMul(matrixSize) {
+    const pointwiseMul = gpu.createKernel(function (matrixA, matrixB) {
+        return complexMul(matrixA[this.thread.y][this.thread.x], matrixB[this.thread.y][this.thread.x]);
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setArgumentTypes({ matrixA: 'Array2D(2)', matrixB: 'Array2D(2)' });
+    return pointwiseMul;
+}
+exports.createPointwiseMul = createPointwiseMul;
+function createMatrixMul(matrixSize) {
+    const matrixMul = gpu.createKernel(function (matrix, x) {
+        return complexMul(matrix[this.thread.y][this.thread.x], [x, 0]);
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setArgumentTypes({ matrix: 'Array2D(2)', x: 'Float' });
+    return matrixMul;
+}
+exports.createMatrixMul = createMatrixMul;
+function createApplyGrowth(matrixSize) {
+    const applyGrowth = gpu.createKernel(function (matrix, center, width, dt) {
+        const point = matrix[this.thread.y][this.thread.x];
+        return [
+            dt * growthFunction(point[0], center, width),
+            point[1]
+        ];
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setArgumentTypes({
+        matrix: 'Array2D(2)',
+        center: 'Float',
+        width: 'Float',
+        dt: 'Float'
+    });
+    return applyGrowth;
+}
+exports.createApplyGrowth = createApplyGrowth;
+function createRender(matrixSize) {
+    const render = gpu.createKernel(function (matrix) {
+        const point = matrix[this.thread.y][this.thread.x];
+        this.color(0, 0, point[0], 255);
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setGraphical(true)
+        .setArgumentTypes({ matrix: 'Array2D(2)' });
+    return render;
+}
+exports.createRender = createRender;
+function createDraw(matrixSize) {
+    const draw = gpu.createKernel(function (matrix, x, y, radius, brush) {
+        const distX = x - this.thread.x;
+        const distY = y - this.thread.y;
+        const distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
+        return distance <= radius ? [brush, 0] : matrix[this.thread.y][this.thread.x];
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setArgumentTypes({
+        matrix: 'Array2D(2)',
+        x: 'Float',
+        y: 'Float',
+        radius: 'Float',
+        brush: 'Float'
+    });
+    return draw;
+}
+exports.createDraw = createDraw;
+function createGenerateKernel(matrixSize) {
+    const generateKernel = gpu.createKernel(function (betas, b_rank, coreWidth, radius) {
+        const dx = this.thread.x - this.constants.halfPoint;
+        const dy = this.thread.y - this.constants.halfPoint;
+        const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)) / radius;
+        if (distance < 1) {
+            const beta = betas[Math.floor(distance * b_rank)];
+            const output = beta * kernel_core((distance * (b_rank + 1)) % 1, coreWidth);
+            return [output, 0];
+        }
+        else {
+            return [0, 0];
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setConstants({ halfPoint: (matrixSize / 2) });
+    return generateKernel;
+}
+exports.createGenerateKernel = createGenerateKernel;
+function createRandomize(matrixSize) {
+    const randomize = gpu.createKernel(function () {
+        const rand = Math.random();
+        return [rand, 0];
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true);
+    return randomize;
+}
+exports.createRandomize = createRandomize;
+function createClear(matrixSize) {
+    const clear = gpu.createKernel(function () {
+        return [0, 0];
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true);
+    return clear;
+}
+exports.createClear = createClear;
+// ----------------------------------------------
+// -------------- Inner functions ---------------
+// ----------------------------------------------
+function kernel_core(distance, coreWidth) {
+    return Math.pow((4 * distance * (1 - distance)), coreWidth);
+}
+function growthFunction(value, center, width) {
+    if (Math.abs(value - center) < 3.0 * width) {
+        return 2 * (Math.pow((1 - (Math.pow((value - center), 2)) / (9 * Math.pow(width, 2))), 4)) - 1.0;
+    }
+    else {
+        return -1;
+    }
+}
+exports.growthFunction = growthFunction;
+function bitReverse(index, n) {
+    let result = 0;
+    for (let i = n; i > 0; i--) {
+        result = result << 1;
+        result += index & 1;
+        index = index >> 1;
+    }
+    return result;
+}
+function complexAdd(a, b) {
+    return [
+        a[0] + b[0],
+        a[1] + b[1]
+    ];
+}
+function complexSub(a, b) {
+    return [
+        a[0] - b[0],
+        a[1] - b[1]
+    ];
+}
+function complexMul(a, b) {
+    return [
+        (a[0] * b[0]) - (a[1] * b[1]),
+        (a[1] * b[0]) + (a[0] * b[1])
+    ];
+}
+function complexDiv(a, b) {
+    return [
+        a[0] / b,
+        a[1] / b
+    ];
+}
+function eulerExp(x) {
+    return [Math.cos(x), Math.sin(x)];
+}
+
+},{"/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js":155}],162:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.FrameCounter = void 0;
 class FrameCounter {
     constructor() {
@@ -31539,127 +31883,13 @@ class FrameCounter {
 }
 exports.FrameCounter = FrameCounter;
 
-},{}],162:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.createDrawFunction = exports.growthFunction = exports.createRenderFunction = exports.createUpdateFunction = void 0;
-const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('webgl2');
-const gpu = new index_js_1.GPU({ canvas: canvas, context: ctx });
-function growthFunction(value, center, width) {
-    if (Math.abs(value - center) < 3.0 * width) {
-        return 2 * (Math.pow((1 - (Math.pow((value - center), 2)) / (9 * Math.pow(width, 2))), 4)) - 1.0;
-    }
-    else {
-        return -1;
-    }
-}
-exports.growthFunction = growthFunction;
-function createUpdateFunction(matrixSize) {
-    gpu.addFunction(growthFunction);
-    const update = gpu.createKernel(function (matrix, m_Size, kernel, k_Size, dt, center, width) {
-        const radius = Math.floor(k_Size / 2);
-        let sum = 0;
-        for (let x = 0; x < k_Size; x++) {
-            for (let y = 0; y < k_Size; y++) {
-                let i = (this.thread.y) - (x - radius);
-                i = (i + m_Size) % m_Size;
-                let j = (this.thread.x) - (y - radius);
-                j = (j + m_Size) % m_Size;
-                sum += kernel[x][y] * matrix[i][j];
-            }
-        }
-        return Math.min(Math.max((dt * growthFunction(sum, center, width) + matrix[this.thread.y][this.thread.x]), 0), 1);
-    })
-        .setOutput([matrixSize, matrixSize])
-        .setPipeline(true)
-        .setImmutable(true);
-    return update;
-}
-exports.createUpdateFunction = createUpdateFunction;
-function createRenderFunction(matrixSize) {
-    const render = gpu.createKernel(function (matrix) {
-        this.color(0, 0, matrix[this.thread.x][this.thread.y], 255);
-    })
-        .setOutput([matrixSize, matrixSize])
-        .setGraphical(true);
-    return render;
-}
-exports.createRenderFunction = createRenderFunction;
-function createDrawFunction(matrixSize) {
-    const draw = gpu.createKernel(function (matrix, x, y, radius, brush) {
-        const distX = x - this.thread.y;
-        const distY = y - this.thread.x;
-        const distance = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
-        return distance <= radius ? brush : matrix[this.thread.y][this.thread.x];
-    })
-        .setOutput([matrixSize, matrixSize])
-        .setPipeline(true)
-        .setImmutable(true);
-    return draw;
-}
-exports.createDrawFunction = createDrawFunction;
-
-},{"/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js":155}],163:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.findScale = exports.generateKernel = void 0;
-function generateKernel(betas, coreWidth, radius) {
-    const b_rank = betas.length - 1;
-    const kernel_core = (distance) => {
-        return Math.pow((4 * distance * (1 - distance)), coreWidth);
-    };
-    const kernelSkeleton = (distance) => {
-        let beta = betas[Math.floor(distance * b_rank)];
-        return beta * kernel_core((distance * (b_rank + 1)) % 1);
-    };
-    const points = [];
-    for (let x = 0; x < radius * 2 + 1; x++) {
-        points[x] = [];
-        for (let y = 0; y < radius * 2 + 1; y++) {
-            const dx = x - radius;
-            const dy = y - radius;
-            const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-            points[x][y] = distance <= radius ? kernelSkeleton(distance / radius) : 0;
-        }
-    }
-    normalize(points);
-    return points;
-}
-exports.generateKernel = generateKernel;
-function normalize(kernel) {
-    let sum = 0;
-    for (let x = 0; x < kernel.length; x++) {
-        for (let y = 0; y < kernel.length; y++) {
-            sum += kernel[x][y];
-        }
-    }
-    for (let x = 0; x < kernel.length; x++) {
-        for (let y = 0; y < kernel.length; y++) {
-            kernel[x][y] /= sum;
-        }
-    }
-}
-function findScale(kernel) {
-    let max = 0;
-    for (let x = 0; x < kernel.length; x++) {
-        for (let y = 0; y < kernel.length; y++) {
-            max = kernel[x][y] > max ? kernel[x][y] : max;
-        }
-    }
-    return 255 / max;
-}
-exports.findScale = findScale;
-
-},{}],164:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
-const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const framecounter_js_1 = require("./framecounter.js");
-const gpufunctions_js_1 = require("./gpufunctions.js");
-const kernel_js_1 = require("./kernel.js");
+const fftpipeline_js_1 = require("./fftpipeline.js");
+//const ext = ctx.getExtension('GMAN_webgl_memory')
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
         var _a;
@@ -31669,36 +31899,84 @@ class Lenia {
         this.dt = 0.05;
         this.mousePressed = false;
         this.brushSize = 10;
+        this.termSignal = false;
         this.animate = () => {
             var _a;
-            const frame = this.update(this.lastFrame, this.size, this.kernel, this.kernel.length, this.dt, this.growthCenter, this.growthWidth);
-            this.render(frame);
-            if (this.lastFrame instanceof index_js_1.Texture)
-                this.lastFrame.delete();
+            let pass;
+            let frame = this.convolve(this.lastFrame, this.kernel);
+            pass = this.applyGrowth(frame, this.growthCenter, this.growthWidth, this.dt);
+            frame.delete();
+            frame = pass;
+            pass = this.pointwiseAdd(frame, this.lastFrame);
+            frame.delete();
+            frame = pass;
+            this.lastFrame.delete();
             this.lastFrame = frame;
+            this.render(this.lastFrame);
+            // if (ext) {
+            //     const info = ext.getMemoryInfo()
+            //     console.log("this.lastFrame rendered:", info.resources.texture)
+            // }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
-            requestAnimationFrame(this.animate);
-        };
-        this.randomize = (size) => {
-            let points = [];
-            for (let i = 0; i < size; i++) {
-                points[i] = [];
-                for (let j = 0; j < size; j++) {
-                    const rand = Math.random();
-                    points[i][j] = rand;
-                }
+            if (!this.termSignal) {
+                requestAnimationFrame(this.animate);
             }
-            return points;
         };
-        this.clearField = (size) => {
-            let points = [];
-            for (let i = 0; i < size; i++) {
-                points[i] = [];
-                for (let j = 0; j < size; j++) {
-                    points[i][j] = 0;
-                }
+        this.fft2d = (matrix) => {
+            let pass;
+            let texture = matrix.clone();
+            pass = this.bitReverseVertical(texture);
+            texture.delete();
+            texture = pass;
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = this.FFTPassVertical(texture, n);
+                texture.delete();
+                texture = pass;
             }
-            return points;
+            pass = this.bitReverseHorizontal(texture);
+            texture.delete();
+            texture = pass;
+            for (let n = 2; n <= this.size; n *= 2) {
+                pass = (this.FFTPassHorizontal(texture, n));
+                texture.delete();
+                texture = pass;
+            }
+            return texture;
+        };
+        this.invfft2d = (matrix) => {
+            let pass;
+            let texture = matrix;
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = this.invFFTPassHorizontal(texture, n);
+                texture.delete();
+                texture = pass;
+            }
+            pass = this.bitReverseHorizontal(texture);
+            texture.delete();
+            texture = pass;
+            for (let n = this.size; n >= 2; n /= 2) {
+                pass = this.invFFTPassVertical(texture, n);
+                texture.delete();
+                texture = pass;
+            }
+            pass = this.bitReverseVertical(texture);
+            texture.delete();
+            texture = pass;
+            return texture;
+        };
+        this.convolve = (matrix, kernel) => {
+            let pass;
+            let texture = this.FFTShift(matrix);
+            pass = this.fft2d(texture);
+            texture.delete();
+            texture = pass;
+            pass = this.pointwiseMul(texture, kernel);
+            texture.delete();
+            texture = pass;
+            pass = this.invfft2d(texture);
+            texture.delete();
+            texture = pass;
+            return texture;
         };
         this.drawGrowthCurve = () => {
             const canvas = document.getElementById('growth-curve');
@@ -31711,30 +31989,10 @@ class Lenia {
                 ctx.beginPath();
                 ctx.moveTo(0, (canvas.height / 2) - (-canvas.height / 2.5));
                 for (let x = 0; x < canvas.width; x++) {
-                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, gpufunctions_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
+                    const y = (canvas.height / 2) - ((canvas.height / 2.5) * (0, fftpipeline_js_1.growthFunction)(x / canvas.width, this.growthCenter, this.growthWidth));
                     ctx.lineTo(x, y);
                 }
                 ctx.stroke();
-            }
-        };
-        this.drawKernel = () => {
-            const canvas = document.getElementById('kernel-display');
-            canvas.width = this.kernel.length;
-            canvas.height = this.kernel.length;
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                const kernelImage = ctx.createImageData(this.kernel.length, this.kernel.length);
-                const epsilon = 0.001;
-                for (let x = 0; x < this.kernel.length; x++) {
-                    for (let y = 0; y < this.kernel.length; y++) {
-                        const index = (x + (y * this.kernel.length)) * 4;
-                        kernelImage.data[index] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 1] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 2] = this.kernel[x][y] * this.kernelScale;
-                        kernelImage.data[index + 3] = 255;
-                    }
-                }
-                ctx.putImageData(kernelImage, 0, 0);
             }
         };
         this.addEventListeners = () => {
@@ -31758,19 +32016,44 @@ class Lenia {
                 this.brushSize = parseFloat(e.target.value);
             });
             (_j = document.getElementById('scramble')) === null || _j === void 0 ? void 0 : _j.addEventListener('click', () => {
-                this.lastFrame = this.randomize(this.size);
+                this.lastFrame.delete();
+                this.lastFrame = this.randomize();
             });
             (_k = document.getElementById('clear')) === null || _k === void 0 ? void 0 : _k.addEventListener('click', () => {
-                this.lastFrame = this.clearField(this.size);
+                this.lastFrame = this.clear();
             });
         };
-        this.lastFrame = this.randomize(size);
-        this.kernel = (0, kernel_js_1.generateKernel)([0.3, 0.6], 4, 20);
-        this.kernelScale = (0, kernel_js_1.findScale)(this.kernel);
-        this.update = (0, gpufunctions_js_1.createUpdateFunction)(size);
-        this.draw = (0, gpufunctions_js_1.createDrawFunction)(size);
-        this.render = (0, gpufunctions_js_1.createRenderFunction)(size);
-        this.render(this.lastFrame);
+        this.findNormalization = (kernel) => {
+            let sum = 0;
+            for (let y = 0; y < kernel.length; y++) {
+                for (let x = 0; x < kernel.length; x++) {
+                    sum += kernel[y][x][0];
+                }
+            }
+            return 1 / sum;
+        };
+        const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
+        this.FFTPassVertical = FFTPassVertical;
+        this.FFTPassHorizontal = FFTPassHorizontal;
+        this.invFFTPassVertical = invFFTPassVertical;
+        this.invFFTPassHorizontal = invFFTPassHorizontal;
+        const { bitReverseVertical, bitReverseHorizontal } = (0, fftpipeline_js_1.createBitReverse)(size);
+        this.bitReverseVertical = bitReverseVertical;
+        this.bitReverseHorizontal = bitReverseHorizontal;
+        this.FFTShift = (0, fftpipeline_js_1.createFFTShift)(size);
+        this.pointwiseAdd = (0, fftpipeline_js_1.createPointwiseAdd)(size);
+        this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
+        this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
+        this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
+        this.render = (0, fftpipeline_js_1.createRender)(size);
+        this.draw = (0, fftpipeline_js_1.createDraw)(size);
+        this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
+        this.clear = (0, fftpipeline_js_1.createClear)(size);
+        this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
+        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 40);
+        const normalizationFactor = this.findNormalization(kernel.toArray());
+        this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
+        this.lastFrame = this.randomize();
         document.addEventListener('contextmenu', event => event.preventDefault());
         const canvas = this.render.canvas;
         (_a = document.getElementById('lenia-container')) === null || _a === void 0 ? void 0 : _a.appendChild(canvas);
@@ -31778,14 +32061,18 @@ class Lenia {
             this.mousePressed = true;
             let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
             let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            this.lastFrame.delete();
+            this.lastFrame = newFrame;
         };
         canvas.onmousemove = (e) => {
             if (!this.mousePressed)
                 return;
             let x = Math.floor((e.offsetX / e.target.offsetWidth) * this.size);
             let y = Math.floor((e.offsetY / e.target.offsetHeight) * this.size);
-            this.lastFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            const newFrame = this.draw(this.lastFrame, x, this.size - y, this.brushSize, e.buttons % 2);
+            this.lastFrame.delete();
+            this.lastFrame = newFrame;
         };
         canvas.onmouseup = () => {
             this.mousePressed = false;
@@ -31797,9 +32084,11 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2)
                 this.mousePressed = true;
         };
+        // canvas.ondblclick = () => {
+        //     this.termSignal = true
+        // }
         this.addEventListeners();
         this.drawGrowthCurve();
-        this.drawKernel();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }
@@ -31818,7 +32107,7 @@ function enableScrollWheel(e) {
     (_a = e.target) === null || _a === void 0 ? void 0 : _a.dispatchEvent(event);
 }
 
-},{"./framecounter.js":161,"./gpufunctions.js":162,"./kernel.js":163,"/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js":155}],165:[function(require,module,exports){
+},{"./fftpipeline.js":161,"./framecounter.js":162}],164:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");
@@ -31826,4 +32115,4 @@ const SPACE_SIZE = 512;
 const lenia = new lenia_js_1.Lenia(SPACE_SIZE, 0.15, 0.02, true);
 lenia.animate();
 
-},{"./lenia.js":164}]},{},[165]);
+},{"./lenia.js":163}]},{},[164]);
