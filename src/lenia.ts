@@ -163,15 +163,17 @@ class Lenia {
         let texture = this.bitReverseVertical(matrix) as Texture
 
         for (let n = 2; n <= this.size; n *= 2) {
-            texture = this.FFTPassVertical(pass = texture, n) as Texture
-            pass.delete()
+            pass = this.FFTPassVertical(texture, n) as Texture
+            texture.delete()
+            texture = pass
         }
 
         texture = this.bitReverseHorizontal(texture) as Texture
 
         for (let n = 2; n <= this.size; n *= 2) {
-            texture = (this.FFTPassHorizontal(pass = texture, n)) as Texture
-            pass.delete()
+            pass = (this.FFTPassHorizontal(texture, n)) as Texture
+            texture.delete()
+            texture = pass
         }
 
         return texture as Texture
@@ -207,7 +209,7 @@ class Lenia {
 
         texture = this.pointwiseMul(texture, kernel) as Texture
 
-        texture = this.invfft2d(texture) as Texture
+        //texture = this.invfft2d(texture) as Texture
 
         return texture
 

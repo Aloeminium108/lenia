@@ -32,13 +32,15 @@ class Lenia {
             let pass;
             let texture = this.bitReverseVertical(matrix);
             for (let n = 2; n <= this.size; n *= 2) {
-                texture = this.FFTPassVertical(pass = texture, n);
-                pass.delete();
+                pass = this.FFTPassVertical(texture, n);
+                texture.delete();
+                texture = pass;
             }
             texture = this.bitReverseHorizontal(texture);
             for (let n = 2; n <= this.size; n *= 2) {
-                texture = (this.FFTPassHorizontal(pass = texture, n));
-                pass.delete();
+                pass = (this.FFTPassHorizontal(texture, n));
+                texture.delete();
+                texture = pass;
             }
             return texture;
         };
@@ -60,7 +62,7 @@ class Lenia {
         this.convolve = (matrix, kernel) => {
             let texture = this.fft2d(matrix);
             texture = this.pointwiseMul(texture, kernel);
-            texture = this.invfft2d(texture);
+            //texture = this.invfft2d(texture) as Texture
             return texture;
         };
         this.drawGrowthCurve = () => {
