@@ -330,12 +330,12 @@ function createGenerateKernel(matrixSize: number) {
         radius: number
     ) {
     
-        const dx = this.thread.x - radius
-        const dy = this.thread.y - radius
+        const dx = this.thread.x - (this.constants.halfPoint as number)
+        const dy = this.thread.y - (this.constants.halfPoint as number)
 
-        const distance = Math.sqrt(dx ** 2 + dy ** 2)
+        const distance = Math.sqrt(dx ** 2 + dy ** 2) / radius
 
-        if (distance <= radius) {
+        if (distance < 1) {
             const beta = betas[Math.floor(distance * b_rank)]
             const output = beta * kernel_core((distance * (b_rank + 1)) % 1, coreWidth)
             return [output, 0]
@@ -346,6 +346,7 @@ function createGenerateKernel(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setConstants({ halfPoint: matrixSize / 2 })
 
     return generateKernel
 

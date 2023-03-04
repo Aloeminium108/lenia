@@ -8,7 +8,7 @@ function Def (html) {
                 <link rel="stylesheet" href="/css/style.css" />
             </head>
             <body>
-                {/*<script src="https://greggman.github.io/webgl-memory/webgl-memory.js" crossorigin></script>*/}
+                {/*<script src="https://greggman.github.io/webgl-memory/webgl-memory.js" crossOrigin></script>*/}
                 {html.children}
             </body>
         </html>

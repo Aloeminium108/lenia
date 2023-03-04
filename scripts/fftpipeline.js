@@ -220,10 +220,10 @@ function createDraw(matrixSize) {
 exports.createDraw = createDraw;
 function createGenerateKernel(matrixSize) {
     const generateKernel = gpu.createKernel(function (betas, b_rank, coreWidth, radius) {
-        const dx = this.thread.x - radius;
-        const dy = this.thread.y - radius;
-        const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-        if (distance <= radius) {
+        const dx = this.thread.x - this.constants.halfPoint;
+        const dy = this.thread.y - this.constants.halfPoint;
+        const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)) / radius;
+        if (distance < 1) {
             const beta = betas[Math.floor(distance * b_rank)];
             const output = beta * kernel_core((distance * (b_rank + 1)) % 1, coreWidth);
             return [output, 0];
@@ -233,7 +233,8 @@ function createGenerateKernel(matrixSize) {
         }
     })
         .setOutput([matrixSize, matrixSize])
-        .setPipeline(true);
+        .setPipeline(true)
+        .setConstants({ halfPoint: matrixSize / 2 });
     return generateKernel;
 }
 exports.createGenerateKernel = createGenerateKernel;

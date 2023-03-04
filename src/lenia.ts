@@ -74,8 +74,8 @@ class Lenia {
         const kernel = this.generateKernel(
             [1.0, 0.7, 0.3],
             2,
-            0.1,
-            80
+            4,
+            20
         )
 
         const normalizationFactor = this.findNormalization((kernel as Texture).toArray() as [][][])
@@ -123,9 +123,9 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2) this.mousePressed = true
         }
 
-        canvas.ondblclick = () => {
-            this.termSignal = true
-        }
+        // canvas.ondblclick = () => {
+        //     this.termSignal = true
+        // }
 
         this.addEventListeners()
 

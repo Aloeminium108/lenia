@@ -31741,10 +31741,10 @@ function createDraw(matrixSize) {
 exports.createDraw = createDraw;
 function createGenerateKernel(matrixSize) {
     const generateKernel = gpu.createKernel(function (betas, b_rank, coreWidth, radius) {
-        const dx = this.thread.x - radius;
-        const dy = this.thread.y - radius;
-        const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-        if (distance <= radius) {
+        const dx = this.thread.x - this.constants.halfPoint;
+        const dy = this.thread.y - this.constants.halfPoint;
+        const distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2)) / radius;
+        if (distance < 1) {
             const beta = betas[Math.floor(distance * b_rank)];
             const output = beta * kernel_core((distance * (b_rank + 1)) % 1, coreWidth);
             return [output, 0];
@@ -31754,7 +31754,8 @@ function createGenerateKernel(matrixSize) {
         }
     })
         .setOutput([matrixSize, matrixSize])
-        .setPipeline(true);
+        .setPipeline(true)
+        .setConstants({ halfPoint: matrixSize / 2 });
     return generateKernel;
 }
 exports.createGenerateKernel = createGenerateKernel;
@@ -31873,7 +31874,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
 const fftpipeline_js_1 = require("./fftpipeline.js");
-const ext = fftpipeline_js_1.ctx.getExtension('GMAN_webgl_memory');
+//const ext = ctx.getExtension('GMAN_webgl_memory')
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
         var _a;
@@ -31897,10 +31898,10 @@ class Lenia {
             this.lastFrame.delete();
             this.lastFrame = frame;
             this.render(this.lastFrame);
-            if (ext) {
-                const info = ext.getMemoryInfo();
-                console.log("this.lastFrame rendered:", info.resources.texture);
-            }
+            // if (ext) {
+            //     const info = ext.getMemoryInfo()
+            //     console.log("this.lastFrame rendered:", info.resources.texture)
+            // }
             (_a = this.frameCounter) === null || _a === void 0 ? void 0 : _a.countFrame();
             if (!this.termSignal) {
                 requestAnimationFrame(this.animate);
@@ -32030,7 +32031,7 @@ class Lenia {
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);
         this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
-        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 0.1, 80);
+        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 20);
         const normalizationFactor = this.findNormalization(kernel.toArray());
         this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
         this.lastFrame = this.randomize();
@@ -32064,9 +32065,9 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2)
                 this.mousePressed = true;
         };
-        canvas.ondblclick = () => {
-            this.termSignal = true;
-        };
+        // canvas.ondblclick = () => {
+        //     this.termSignal = true
+        // }
         this.addEventListeners();
         this.drawGrowthCurve();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
