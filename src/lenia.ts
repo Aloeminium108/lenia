@@ -1,6 +1,6 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
-import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction } from './fftpipeline.js'
+import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction } from './fftpipeline.js'
 
 //const ext = ctx.getExtension('GMAN_webgl_memory')
 
@@ -26,6 +26,8 @@ class Lenia {
 
     private bitReverseVertical: IKernelRunShortcut
     private bitReverseHorizontal: IKernelRunShortcut
+
+    private FFTShift: IKernelRunShortcut
 
     private pointwiseAdd: IKernelRunShortcut
     private pointwiseMul: IKernelRunShortcut
@@ -57,6 +59,8 @@ class Lenia {
         const {bitReverseVertical, bitReverseHorizontal} = createBitReverse(size)
         this.bitReverseVertical = bitReverseVertical
         this.bitReverseHorizontal = bitReverseHorizontal
+
+        this.FFTShift = createFFTShift(size)
         
         this.pointwiseAdd = createPointwiseAdd(size)
         this.pointwiseMul = createPointwiseMul(size)
@@ -75,7 +79,7 @@ class Lenia {
             [1.0, 0.7, 0.3],
             2,
             4,
-            20
+            40
         )
 
         const normalizationFactor = this.findNormalization((kernel as Texture).toArray() as [][][])
@@ -227,7 +231,12 @@ class Lenia {
     private convolve = (matrix: Texture, kernel: Texture) => {
 
         let pass: Texture
-        let texture = this.fft2d(matrix) as Texture
+
+        let texture = this.FFTShift(matrix) as Texture
+
+        pass = this.fft2d(texture) as Texture
+        texture.delete()
+        texture = pass
 
         pass = this.pointwiseMul(texture, kernel) as Texture
         texture.delete()

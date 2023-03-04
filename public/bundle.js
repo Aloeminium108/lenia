@@ -31521,7 +31521,7 @@ module.exports = {
 },{"./input":156,"./texture":159,"acorn":7}],161:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ctx = exports.growthFunction = exports.createTestPipeline = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createBitReverse = void 0;
+exports.ctx = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('webgl2');
@@ -31562,6 +31562,37 @@ function createBitReverse(matrixSize) {
     return { bitReverseVertical, bitReverseHorizontal };
 }
 exports.createBitReverse = createBitReverse;
+function createFFTShift(matrixSize) {
+    const FFTShift = gpu.createKernel(function (matrix) {
+        if (this.thread.y >= this.constants.halfPoint) {
+            if (this.thread.x >= this.constants.halfPoint) {
+                // QUADRANT 1
+                return matrix[this.thread.y - this.constants.halfPoint][this.thread.x - this.constants.halfPoint];
+            }
+            else {
+                // QUADRANT 4
+                return matrix[this.thread.y - this.constants.halfPoint][this.thread.x + this.constants.halfPoint];
+            }
+        }
+        else {
+            if (this.thread.x >= this.constants.halfPoint) {
+                // QUADRANT 2
+                return matrix[this.thread.y + this.constants.halfPoint][this.thread.x - this.constants.halfPoint];
+            }
+            else {
+                // QUADRANT 3
+                return matrix[this.thread.y + this.constants.halfPoint][this.thread.x + this.constants.halfPoint];
+            }
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ halfPoint: matrixSize / 2 })
+        .setArgumentTypes({ matrix: 'Array2D(2)' });
+    return FFTShift;
+}
+exports.createFFTShift = createFFTShift;
 function createFFTPass(matrixSize) {
     if (Math.log2(matrixSize) % 1 > 0) {
         throw new RangeError('Matrix size must be a power of 2');
@@ -31779,22 +31810,6 @@ function createClear(matrixSize) {
     return clear;
 }
 exports.createClear = createClear;
-function createTestPipeline(matrixSize) {
-    const test1 = gpu.createKernel(function (matrix) {
-        return matrix[this.thread.x] + 1;
-    })
-        .setOutput([matrixSize])
-        .setPipeline(true)
-        .setImmutable(true);
-    const test2 = gpu.createKernel(function (matrix) {
-        return matrix[this.thread.x] + 5;
-    })
-        .setOutput([matrixSize])
-        .setPipeline(true)
-        .setImmutable(true);
-    return { test1, test2 };
-}
-exports.createTestPipeline = createTestPipeline;
 // ----------------------------------------------
 // -------------- Inner functions ---------------
 // ----------------------------------------------
@@ -31951,7 +31966,10 @@ class Lenia {
         };
         this.convolve = (matrix, kernel) => {
             let pass;
-            let texture = this.fft2d(matrix);
+            let texture = this.FFTShift(matrix);
+            pass = this.fft2d(texture);
+            texture.delete();
+            texture = pass;
             pass = this.pointwiseMul(texture, kernel);
             texture.delete();
             texture = pass;
@@ -32022,6 +32040,7 @@ class Lenia {
         const { bitReverseVertical, bitReverseHorizontal } = (0, fftpipeline_js_1.createBitReverse)(size);
         this.bitReverseVertical = bitReverseVertical;
         this.bitReverseHorizontal = bitReverseHorizontal;
+        this.FFTShift = (0, fftpipeline_js_1.createFFTShift)(size);
         this.pointwiseAdd = (0, fftpipeline_js_1.createPointwiseAdd)(size);
         this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
@@ -32031,7 +32050,7 @@ class Lenia {
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);
         this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
-        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 20);
+        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 40);
         const normalizationFactor = this.findNormalization(kernel.toArray());
         this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
         this.lastFrame = this.randomize();

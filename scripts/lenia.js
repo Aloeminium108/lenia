@@ -80,7 +80,10 @@ class Lenia {
         };
         this.convolve = (matrix, kernel) => {
             let pass;
-            let texture = this.fft2d(matrix);
+            let texture = this.FFTShift(matrix);
+            pass = this.fft2d(texture);
+            texture.delete();
+            texture = pass;
             pass = this.pointwiseMul(texture, kernel);
             texture.delete();
             texture = pass;
@@ -151,6 +154,7 @@ class Lenia {
         const { bitReverseVertical, bitReverseHorizontal } = (0, fftpipeline_js_1.createBitReverse)(size);
         this.bitReverseVertical = bitReverseVertical;
         this.bitReverseHorizontal = bitReverseHorizontal;
+        this.FFTShift = (0, fftpipeline_js_1.createFFTShift)(size);
         this.pointwiseAdd = (0, fftpipeline_js_1.createPointwiseAdd)(size);
         this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
@@ -160,7 +164,7 @@ class Lenia {
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);
         this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
-        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 20);
+        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 40);
         const normalizationFactor = this.findNormalization(kernel.toArray());
         this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
         this.lastFrame = this.randomize();

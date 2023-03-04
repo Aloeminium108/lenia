@@ -49,6 +49,40 @@ function createBitReverse(matrixSize: number) {
     return { bitReverseVertical, bitReverseHorizontal }
 }
 
+function createFFTShift(matrixSize: number) {
+
+    const FFTShift = gpu.createKernel(function (
+        matrix: number[][][]
+    ) {
+        if (this.thread.y >= this.constants.halfPoint) {
+            if (this.thread.x >= this.constants.halfPoint) {
+                // QUADRANT 1
+                return matrix[this.thread.y - (this.constants.halfPoint as number)][this.thread.x - (this.constants.halfPoint as number)]
+            } else {
+                // QUADRANT 4
+                return matrix[this.thread.y - (this.constants.halfPoint as number)][this.thread.x + (this.constants.halfPoint as number)]
+            }
+        } else {
+            if (this.thread.x >= this.constants.halfPoint) {
+                // QUADRANT 2
+                return matrix[this.thread.y + (this.constants.halfPoint as number)][this.thread.x - (this.constants.halfPoint as number)]
+            } else {
+                // QUADRANT 3
+                return matrix[this.thread.y + (this.constants.halfPoint as number)][this.thread.x + (this.constants.halfPoint as number)]
+            }
+        }
+    })
+        .setOutput([matrixSize, matrixSize])
+        .setPipeline(true)
+        .setImmutable(true)
+        .setConstants({ halfPoint: matrixSize / 2 })
+        .setArgumentTypes({ matrix: 'Array2D(2)' })
+
+
+    return FFTShift
+
+}
+
 function createFFTPass(matrixSize: number) {
     if (Math.log2(matrixSize) % 1 > 0) {
         throw new RangeError('Matrix size must be a power of 2')
@@ -378,30 +412,6 @@ function createClear(matrixSize: number) {
 
 }
 
-function createTestPipeline(matrixSize: number) {
-
-    const test1 = gpu.createKernel(function(
-        matrix: number[]
-    ) {
-        return matrix[this.thread.x] + 1
-    })
-        .setOutput([matrixSize])
-        .setPipeline(true)
-        .setImmutable(true)
-
-    const test2 = gpu.createKernel(function(
-        matrix: number[]
-    ) {
-        return matrix[this.thread.x] + 5
-    })
-        .setOutput([matrixSize])
-        .setPipeline(true)
-        .setImmutable(true)
-
-    return { test1, test2 }
-
-}
-
 // ----------------------------------------------
 // -------------- Inner functions ---------------
 // ----------------------------------------------
@@ -466,6 +476,7 @@ function eulerExp(x: number) {
 
 export { 
     createBitReverse, 
+    createFFTShift,
     createFFTPass, 
     createApplyGrowth, 
     createPointwiseAdd,
@@ -476,7 +487,6 @@ export {
     createGenerateKernel,
     createRandomize,
     createClear,
-    createTestPipeline,
     growthFunction,
     ctx
 }
