@@ -98,7 +98,7 @@ class Lenia {
             0.1,
             RGBtoMSH([6, 29, 113], reference),
             RGBtoMSH([165, 0, 38], reference),
-            RGBtoMSH([255, 255, 255], reference),
+            RGBtoMSH([253, 255, 194], reference),
             reference
         )
         this.draw = createDraw(size)

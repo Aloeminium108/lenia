@@ -183,7 +183,7 @@ class Lenia {
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
         this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
         const reference = referenceXYZ.F12;
-        this.render = (0, fftpipeline_js_1.createRender)(size, 0.1, (0, fftpipeline_js_1.RGBtoMSH)([6, 29, 113], reference), (0, fftpipeline_js_1.RGBtoMSH)([165, 0, 38], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
+        this.render = (0, fftpipeline_js_1.createRender)(size, 0.1, (0, fftpipeline_js_1.RGBtoMSH)([6, 29, 113], reference), (0, fftpipeline_js_1.RGBtoMSH)([165, 0, 38], reference), (0, fftpipeline_js_1.RGBtoMSH)([253, 255, 194], reference), reference);
         this.draw = (0, fftpipeline_js_1.createDraw)(size);
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);
