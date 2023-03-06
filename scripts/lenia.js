@@ -4,6 +4,28 @@ exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
 const fftpipeline_js_1 = require("./fftpipeline.js");
 //const ext = ctx.getExtension('GMAN_webgl_memory')
+const referenceXYZ = {
+    A: [111.144, 100, 35.2],
+    B: [99.178, 100, 84.3493],
+    C: [97.285, 100, 116.145],
+    D50: [96.720, 100, 81.427],
+    D55: [95.799, 100, 90.926],
+    D65: [94.811, 100, 107.304],
+    D75: [94.416, 100, 120.641],
+    E: [100, 100, 100],
+    F1: [94.791, 100, 103.191],
+    F2: [103.280, 100, 69.026],
+    F3: [108.968, 100, 51.965],
+    F4: [114.961, 100, 40.963],
+    F5: [93.369, 100, 98.636],
+    F6: [102.148, 100, 62.074],
+    F7: [95.792, 100, 107.687],
+    F8: [97.115, 100, 81.135],
+    F9: [102.116, 100, 67.826],
+    F10: [99.001, 100, 83.134],
+    F11: [103.866, 100, 65.627],
+    F12: [111.428, 100, 40.353],
+};
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
         var _a;
@@ -160,7 +182,8 @@ class Lenia {
         this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
         this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
-        this.render = (0, fftpipeline_js_1.createRender)(size);
+        const reference = referenceXYZ.F12;
+        this.render = (0, fftpipeline_js_1.createRender)(size, 0.1, (0, fftpipeline_js_1.RGBtoMSH)([6, 29, 113], reference), (0, fftpipeline_js_1.RGBtoMSH)([165, 0, 38], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
         this.draw = (0, fftpipeline_js_1.createDraw)(size);
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);

@@ -14,6 +14,44 @@ gpu.addFunction(complexMul, { argumentTypes: {a: 'Array(2)', b: 'Array(2)'}, ret
 gpu.addFunction(complexDiv, { argumentTypes: {a: 'Array(2)', b: 'Float'}, returnType: 'Array(2)' })
 gpu.addFunction(eulerExp, { argumentTypes: {x: 'Float'}, returnType: 'Array(2)' })
 
+gpu.addFunction(colorInterpolation,
+    { argumentTypes: { 
+        distance: 'Float',
+        midPoint: 'Float',
+        minColor: 'Array(3)',
+        maxColor: 'Array(3)',
+        midColor: 'Array(3)',
+        reference: 'Array(3)'
+    }, returnType: 
+        'Array(3)'
+    })
+gpu.addFunction(MSHtoRGB,
+    { argumentTypes: { 
+        color: 'Array(3)',
+        reference: 'Array(3)'
+    }, returnType: 
+        'Array(3)'
+    })
+gpu.addFunction(XYZtoRGB,
+    { argumentTypes: { 
+        color: 'Array(3)'
+    }, returnType: 
+        'Array(3)'
+    })
+gpu.addFunction(LABtoXYZ,
+    { argumentTypes: { 
+        color: 'Array(3)',
+        reference: 'Array(3)'
+    }, returnType: 
+        'Array(3)'
+    })
+gpu.addFunction(MSHtoLAB,
+    { argumentTypes: { 
+        color: 'Array(3)'
+    }, returnType: 
+        'Array(3)'
+    })
+
 function createBitReverse(matrixSize: number) {
     if (Math.log2(matrixSize) % 1 > 0) {
         throw new RangeError('Matrix size must be a power of 2')
@@ -308,16 +346,45 @@ function createApplyGrowth(matrixSize: number) {
     return applyGrowth
 }
 
-function createRender(matrixSize: number) {
+function createRender(
+    matrixSize: number,
+    midPoint: number,
+    minColor: number[], 
+    maxColor: number[], 
+    midColor: number[],
+    reference: number[]
+) {
 
     const render = gpu.createKernel(function (
         matrix: number[][][]
     ) {
         const point = matrix[this.thread.y][this.thread.x]
-        this.color(0, 0, point[0], 255)
+        const color = colorInterpolation(
+            point[0],
+            this.constants.midPoint as number,
+            this.constants.minColor as number[],
+            this.constants.maxColor as number[],
+            this.constants.midColor as number[],
+            this.constants.reference as number[],
+        )
+        this.color(color[0]/255, color[1]/255, color[2]/255, 255)
     })
         .setOutput([matrixSize, matrixSize])
         .setGraphical(true)
+        .setConstants({
+            midPoint: midPoint,
+            minColor: minColor, 
+            maxColor: maxColor, 
+            midColor: midColor,
+            reference: reference
+        })
+        .setConstantTypes({
+            midPoint: 'Float',
+            minColor: 'Array(3)', 
+            maxColor: 'Array(3)', 
+            midColor: 'Array(3)',
+            reference: 'Array(3)'
+        })
         .setArgumentTypes({ matrix: 'Array2D(2)' })
     
     return render
@@ -417,6 +484,181 @@ function createClear(matrixSize: number) {
 // -------------- Inner functions ---------------
 // ----------------------------------------------
 
+function colorInterpolation(
+    distance: number, 
+    midPoint: number,
+    minColor: number[], 
+    maxColor: number[], 
+    midColor: number[],
+    reference: number[]
+) {
+
+    let M1 = [0, 0, 0]
+    let M2 = [0, 0, 0]
+
+    let interp = distance
+
+    if (interp < midPoint) {
+        M1 = minColor
+        M2 = midColor
+        interp /= midPoint
+    } else {
+        M1 = midColor
+        M2 = maxColor
+        interp -= midPoint
+        interp /= (1 - midPoint)
+    }
+
+
+    const color = [
+        (1 - interp) * M1[0] + interp * M2[0],
+        (1 - interp) * M1[1] + interp * M2[1],
+        (1 - interp) * M1[2] + interp * M2[2],
+    ]
+
+    return MSHtoRGB(color, reference)
+}
+
+function MSHtoRGB(color: number[], reference: number[]) {
+    return XYZtoRGB(LABtoXYZ(MSHtoLAB(color), reference))
+}
+
+function RGBtoMSH(color: number[], reference: number[]) {
+    return LABtoMSH(XYZtoLAB(RGBtoXYZ(color), reference))
+}
+
+function RGBtoXYZ(color: number[]): number[] {
+    let R = ( color[0] / 255 )
+    let G = ( color[1] / 255 )
+    let B = ( color[2] / 255 )
+
+    R = R > 0.04045 ? 
+        ((R + 0.055) / 1.055) ** 2.4 :
+        R / 12.92
+
+    G = G > 0.04045 ?
+        ((G + 0.055) / 1.055) ** 2.4 :
+        G / 12.92
+    
+    B = B > 0.04045 ?
+        ((B + 0.055) / 1.055) ** 2.4 :
+        B / 12.92
+
+    R *= 100
+    G *= 100
+    B *= 100
+
+    return [
+        R * 0.4124 + G * 0.3576 + B * 0.1805,
+        R * 0.2126 + G * 0.7152 + B * 0.0722,
+        R * 0.0193 + G * 0.1192 + B * 0.9505
+    ]
+}
+
+function XYZtoRGB(color: number[]): number[] {
+    const X = color[0] / 100
+    const Y = color[1] / 100
+    const Z = color[2] / 100
+    
+    let R = X *  3.2406 + Y * -1.5372 + Z * -0.4986
+    let G = X * -0.9689 + Y *  1.8758 + Z *  0.0415
+    let B = X *  0.0557 + Y * -0.2040 + Z *  1.0570
+
+    R = R > 0.0031308 ?
+        1.055 * (R ** (1 / 2.4)) - 0.055 :
+        R * 12.92
+    
+    G = G > 0.0031308 ?
+        1.055 * (G ** (1 / 2.4)) - 0.055 :
+        G * 12.92
+    
+    B = B > 0.0031308 ?
+        1.055 * (B ** (1 / 2.4)) - 0.055 :
+        B * 12.92
+    
+    return [
+        R * 255,
+        G * 255,
+        B * 255
+    ]
+}
+
+function XYZtoLAB(color: number[], reference: number[]): number[] {
+    let X = color[0] / reference[0]
+    let Y = color[1] / reference[1]
+    let Z = color[2] / reference[2]
+
+    X = X > 0.008856 ?
+        X ** (1/3) :
+        (7.787 * X) + (16 / 116)
+        
+    Y = Y > 0.008856 ?
+        Y ** (1/3) :
+        (7.787 * Y) + (16 / 116)
+
+    Z = Z > 0.008856 ?
+        Z ** (1/3) :
+        (7.787 * Z) + (16 / 116)
+
+    return [
+        (116 * Y) - 16,
+        500 * (X - Y),
+        200 * (Y - Z)
+    ]
+}
+
+function LABtoXYZ(color: number[], reference: number[]): number[] {
+    
+    let Y = (color[0] + 16) / 116
+    let X = color[1] / 500 + Y
+    let Z = Y - color[2] / 200
+
+    X = X ** 3 > 0.008856 ?
+        X ** 3 :
+        (X - 16 / 116) / 7.787
+    
+    Y = Y ** 3 > 0.008856 ?
+        Y ** 3 :
+        (Y - 16 / 116) / 7.787
+
+    Z = Z ** 3 > 0.008856 ?
+        Z ** 3 :
+        (Z - 16 / 116) / 7.787
+
+
+    return [
+        X * reference[0],
+        Y * reference[1],
+        Z * reference[2]
+    ]
+}
+
+function LABtoMSH(color: number[]): number[] {
+    const M = Math.sqrt(color[0] ** 2 + color[1] ** 2 + color[2] ** 2)
+
+    const factor1 = color[1] < 0 || color[2] < 0 ?
+        -1 :
+        1
+
+    const factor2 = color[1] > 0 && color[2] < 0 ?
+        -1 :
+        1
+
+    return [
+        M,
+        Math.acos(color[0] / M) * factor1 * factor2,
+        Math.atan(color[2] / color[1])
+    ]
+}
+
+function MSHtoLAB(color: number[]): number[] {
+    return [
+        color[0] * Math.cos(color[1]),
+        color[0] * Math.sin(color[1]) * Math.cos(color[2]),
+        color[0] * Math.sin(color[1]) * Math.sin(color[2])
+    ]
+}
+
 function kernel_core(distance: number, coreWidth: number) {
     return (4 * distance * (1 - distance)) ** coreWidth
 }
@@ -489,5 +731,6 @@ export {
     createRandomize,
     createClear,
     growthFunction,
+    RGBtoMSH,
     ctx
 }

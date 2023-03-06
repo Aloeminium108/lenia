@@ -31521,7 +31521,7 @@ module.exports = {
 },{"./input":156,"./texture":159,"acorn":7}],161:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ctx = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
+exports.ctx = exports.RGBtoMSH = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('webgl2');
@@ -31535,6 +31535,33 @@ gpu.addFunction(complexSub, { argumentTypes: { a: 'Array(2)', b: 'Array(2)' }, r
 gpu.addFunction(complexMul, { argumentTypes: { a: 'Array(2)', b: 'Array(2)' }, returnType: 'Array(2)' });
 gpu.addFunction(complexDiv, { argumentTypes: { a: 'Array(2)', b: 'Float' }, returnType: 'Array(2)' });
 gpu.addFunction(eulerExp, { argumentTypes: { x: 'Float' }, returnType: 'Array(2)' });
+gpu.addFunction(colorInterpolation, { argumentTypes: {
+        distance: 'Float',
+        midPoint: 'Float',
+        minColor: 'Array(3)',
+        maxColor: 'Array(3)',
+        midColor: 'Array(3)',
+        reference: 'Array(3)'
+    }, returnType: 'Array(3)'
+});
+gpu.addFunction(MSHtoRGB, { argumentTypes: {
+        color: 'Array(3)',
+        reference: 'Array(3)'
+    }, returnType: 'Array(3)'
+});
+gpu.addFunction(XYZtoRGB, { argumentTypes: {
+        color: 'Array(3)'
+    }, returnType: 'Array(3)'
+});
+gpu.addFunction(LABtoXYZ, { argumentTypes: {
+        color: 'Array(3)',
+        reference: 'Array(3)'
+    }, returnType: 'Array(3)'
+});
+gpu.addFunction(MSHtoLAB, { argumentTypes: {
+        color: 'Array(3)'
+    }, returnType: 'Array(3)'
+});
 function createBitReverse(matrixSize) {
     if (Math.log2(matrixSize) % 1 > 0) {
         throw new RangeError('Matrix size must be a power of 2');
@@ -31739,13 +31766,28 @@ function createApplyGrowth(matrixSize) {
     return applyGrowth;
 }
 exports.createApplyGrowth = createApplyGrowth;
-function createRender(matrixSize) {
+function createRender(matrixSize, midPoint, minColor, maxColor, midColor, reference) {
     const render = gpu.createKernel(function (matrix) {
         const point = matrix[this.thread.y][this.thread.x];
-        this.color(0, 0, point[0], 255);
+        const color = colorInterpolation(point[0], this.constants.midPoint, this.constants.minColor, this.constants.maxColor, this.constants.midColor, this.constants.reference);
+        this.color(color[0] / 255, color[1] / 255, color[2] / 255, 255);
     })
         .setOutput([matrixSize, matrixSize])
         .setGraphical(true)
+        .setConstants({
+        midPoint: midPoint,
+        minColor: minColor,
+        maxColor: maxColor,
+        midColor: midColor,
+        reference: reference
+    })
+        .setConstantTypes({
+        midPoint: 'Float',
+        minColor: 'Array(3)',
+        maxColor: 'Array(3)',
+        midColor: 'Array(3)',
+        reference: 'Array(3)'
+    })
         .setArgumentTypes({ matrix: 'Array2D(2)' });
     return render;
 }
@@ -31814,6 +31856,138 @@ exports.createClear = createClear;
 // ----------------------------------------------
 // -------------- Inner functions ---------------
 // ----------------------------------------------
+function colorInterpolation(distance, midPoint, minColor, maxColor, midColor, reference) {
+    let M1 = [0, 0, 0];
+    let M2 = [0, 0, 0];
+    let interp = distance;
+    if (interp < midPoint) {
+        M1 = minColor;
+        M2 = midColor;
+        interp /= midPoint;
+    }
+    else {
+        M1 = midColor;
+        M2 = maxColor;
+        interp -= midPoint;
+        interp /= (1 - midPoint);
+    }
+    const color = [
+        (1 - interp) * M1[0] + interp * M2[0],
+        (1 - interp) * M1[1] + interp * M2[1],
+        (1 - interp) * M1[2] + interp * M2[2],
+    ];
+    return MSHtoRGB(color, reference);
+}
+function MSHtoRGB(color, reference) {
+    return XYZtoRGB(LABtoXYZ(MSHtoLAB(color), reference));
+}
+function RGBtoMSH(color, reference) {
+    return LABtoMSH(XYZtoLAB(RGBtoXYZ(color), reference));
+}
+exports.RGBtoMSH = RGBtoMSH;
+function RGBtoXYZ(color) {
+    let R = (color[0] / 255);
+    let G = (color[1] / 255);
+    let B = (color[2] / 255);
+    R = R > 0.04045 ?
+        Math.pow(((R + 0.055) / 1.055), 2.4) :
+        R / 12.92;
+    G = G > 0.04045 ?
+        Math.pow(((G + 0.055) / 1.055), 2.4) :
+        G / 12.92;
+    B = B > 0.04045 ?
+        Math.pow(((B + 0.055) / 1.055), 2.4) :
+        B / 12.92;
+    R *= 100;
+    G *= 100;
+    B *= 100;
+    return [
+        R * 0.4124 + G * 0.3576 + B * 0.1805,
+        R * 0.2126 + G * 0.7152 + B * 0.0722,
+        R * 0.0193 + G * 0.1192 + B * 0.9505
+    ];
+}
+function XYZtoRGB(color) {
+    const X = color[0] / 100;
+    const Y = color[1] / 100;
+    const Z = color[2] / 100;
+    let R = X * 3.2406 + Y * -1.5372 + Z * -0.4986;
+    let G = X * -0.9689 + Y * 1.8758 + Z * 0.0415;
+    let B = X * 0.0557 + Y * -0.2040 + Z * 1.0570;
+    R = R > 0.0031308 ?
+        1.055 * (Math.pow(R, (1 / 2.4))) - 0.055 :
+        R * 12.92;
+    G = G > 0.0031308 ?
+        1.055 * (Math.pow(G, (1 / 2.4))) - 0.055 :
+        G * 12.92;
+    B = B > 0.0031308 ?
+        1.055 * (Math.pow(B, (1 / 2.4))) - 0.055 :
+        B * 12.92;
+    return [
+        R * 255,
+        G * 255,
+        B * 255
+    ];
+}
+function XYZtoLAB(color, reference) {
+    let X = color[0] / reference[0];
+    let Y = color[1] / reference[1];
+    let Z = color[2] / reference[2];
+    X = X > 0.008856 ?
+        Math.pow(X, (1 / 3)) :
+        (7.787 * X) + (16 / 116);
+    Y = Y > 0.008856 ?
+        Math.pow(Y, (1 / 3)) :
+        (7.787 * Y) + (16 / 116);
+    Z = Z > 0.008856 ?
+        Math.pow(Z, (1 / 3)) :
+        (7.787 * Z) + (16 / 116);
+    return [
+        (116 * Y) - 16,
+        500 * (X - Y),
+        200 * (Y - Z)
+    ];
+}
+function LABtoXYZ(color, reference) {
+    let Y = (color[0] + 16) / 116;
+    let X = color[1] / 500 + Y;
+    let Z = Y - color[2] / 200;
+    X = Math.pow(X, 3) > 0.008856 ?
+        Math.pow(X, 3) :
+        (X - 16 / 116) / 7.787;
+    Y = Math.pow(Y, 3) > 0.008856 ?
+        Math.pow(Y, 3) :
+        (Y - 16 / 116) / 7.787;
+    Z = Math.pow(Z, 3) > 0.008856 ?
+        Math.pow(Z, 3) :
+        (Z - 16 / 116) / 7.787;
+    return [
+        X * reference[0],
+        Y * reference[1],
+        Z * reference[2]
+    ];
+}
+function LABtoMSH(color) {
+    const M = Math.sqrt(Math.pow(color[0], 2) + Math.pow(color[1], 2) + Math.pow(color[2], 2));
+    const factor1 = color[1] < 0 || color[2] < 0 ?
+        -1 :
+        1;
+    const factor2 = color[1] > 0 && color[2] < 0 ?
+        -1 :
+        1;
+    return [
+        M,
+        Math.acos(color[0] / M) * factor1 * factor2,
+        Math.atan(color[2] / color[1])
+    ];
+}
+function MSHtoLAB(color) {
+    return [
+        color[0] * Math.cos(color[1]),
+        color[0] * Math.sin(color[1]) * Math.cos(color[2]),
+        color[0] * Math.sin(color[1]) * Math.sin(color[2])
+    ];
+}
 function kernel_core(distance, coreWidth) {
     return Math.pow((4 * distance * (1 - distance)), coreWidth);
 }
@@ -31891,6 +32065,28 @@ exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
 const fftpipeline_js_1 = require("./fftpipeline.js");
 //const ext = ctx.getExtension('GMAN_webgl_memory')
+const referenceXYZ = {
+    A: [111.144, 100, 35.2],
+    B: [99.178, 100, 84.3493],
+    C: [97.285, 100, 116.145],
+    D50: [96.720, 100, 81.427],
+    D55: [95.799, 100, 90.926],
+    D65: [94.811, 100, 107.304],
+    D75: [94.416, 100, 120.641],
+    E: [100, 100, 100],
+    F1: [94.791, 100, 103.191],
+    F2: [103.280, 100, 69.026],
+    F3: [108.968, 100, 51.965],
+    F4: [114.961, 100, 40.963],
+    F5: [93.369, 100, 98.636],
+    F6: [102.148, 100, 62.074],
+    F7: [95.792, 100, 107.687],
+    F8: [97.115, 100, 81.135],
+    F9: [102.116, 100, 67.826],
+    F10: [99.001, 100, 83.134],
+    F11: [103.866, 100, 65.627],
+    F12: [111.428, 100, 40.353],
+};
 class Lenia {
     constructor(size, growthCenter, growthWidth, countFrames = false) {
         var _a;
@@ -32047,7 +32243,8 @@ class Lenia {
         this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
         this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
-        this.render = (0, fftpipeline_js_1.createRender)(size);
+        const reference = referenceXYZ.F12;
+        this.render = (0, fftpipeline_js_1.createRender)(size, 0.1, (0, fftpipeline_js_1.RGBtoMSH)([6, 29, 113], reference), (0, fftpipeline_js_1.RGBtoMSH)([165, 0, 38], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
         this.draw = (0, fftpipeline_js_1.createDraw)(size);
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);

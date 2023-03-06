@@ -1,8 +1,31 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
-import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction } from './fftpipeline.js'
+import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction, RGBtoMSH } from './fftpipeline.js'
 
 //const ext = ctx.getExtension('GMAN_webgl_memory')
+
+const referenceXYZ = {
+    A: [111.144, 100, 35.2],
+    B: [99.178, 100, 84.3493],
+    C: [97.285, 100, 116.145],
+    D50: [96.720, 100, 81.427],
+    D55: [95.799, 100, 90.926],
+    D65: [94.811, 100, 107.304],
+    D75: [94.416, 100, 120.641],
+    E: [100, 100, 100],
+    F1: [94.791, 100, 103.191],
+    F2: [103.280, 100, 69.026],
+    F3: [108.968, 100, 51.965],
+    F4: [114.961, 100, 40.963],
+    F5: [93.369, 100, 98.636],
+    F6: [102.148, 100, 62.074],
+    F7: [95.792, 100, 107.687],
+    F8: [97.115, 100, 81.135],
+    F9: [102.116, 100, 67.826],
+    F10: [99.001, 100, 83.134],
+    F11: [103.866, 100, 65.627],
+    F12: [111.428, 100, 40.353],
+}
 
 class Lenia {
 
@@ -68,7 +91,16 @@ class Lenia {
 
         this.applyGrowth = createApplyGrowth(size)
 
-        this.render = createRender(size)
+        const reference = referenceXYZ.F12
+
+        this.render = createRender(
+            size,
+            0.1,
+            RGBtoMSH([6, 29, 113], reference),
+            RGBtoMSH([165, 0, 38], reference),
+            RGBtoMSH([255, 255, 255], reference),
+            reference
+        )
         this.draw = createDraw(size)
 
         this.randomize = createRandomize(size)
