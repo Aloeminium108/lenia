@@ -1,6 +1,6 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
-import { createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction, RGBtoMSH } from './fftpipeline.js'
+import { colorInterpolation, createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction, RGBtoMSH } from './fftpipeline.js'
 
 //const ext = ctx.getExtension('GMAN_webgl_memory')
 
@@ -29,16 +29,17 @@ const referenceXYZ = {
 
 class Lenia {
 
-    dt: number = 0.05
+    private lastFrame: Texture
 
-    mousePressed: boolean = false
-    brushSize: number = 10
+    private kernel: Texture
+    private kernelImage: Texture
 
-    kernel: Texture
+    private dt: number = 0.05
 
-    lastFrame: Texture
+    private mousePressed: boolean = false
+    private brushSize: number = 10
 
-    frameCounter?: FrameCounter
+    private frameCounter?: FrameCounter
 
     private termSignal: boolean = false
 
@@ -70,6 +71,7 @@ class Lenia {
         private size: number, 
         private growthCenter: number,
         private growthWidth: number,
+        private kernelParams: KernelParams,
         countFrames: boolean = false
     ) {
 
@@ -95,10 +97,10 @@ class Lenia {
 
         this.render = createRender(
             size,
-            0.1,
-            RGBtoMSH([6, 29, 113], reference),
-            RGBtoMSH([165, 0, 38], reference),
-            RGBtoMSH([253, 255, 194], reference),
+            0.01,
+            RGBtoMSH([2, 16, 68], reference),
+            RGBtoMSH([93, 6, 255], reference),
+            RGBtoMSH([255, 255, 255], reference),
             reference
         )
         this.draw = createDraw(size)
@@ -107,16 +109,16 @@ class Lenia {
         this.clear = createClear(size)
         this.generateKernel = createGenerateKernel(size)
 
-        const kernel = this.generateKernel(
-            [1.0, 0.7, 0.3],
-            2,
-            4,
-            40
-        )
+        this.kernelImage = this.generateKernel(
+            this.kernelParams.betas,
+            this.kernelParams.bRank,
+            this.kernelParams.coreWidth,
+            this.kernelParams.radius
+        ) as Texture
 
-        const normalizationFactor = this.findNormalization((kernel as Texture).toArray() as [][][])
+        const normalizationFactor = this.findNormalization((this.kernelImage).toArray() as [][][])
 
-        this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor) as Texture)
+        this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor) as Texture)
 
         this.lastFrame = this.randomize() as Texture
 
@@ -159,13 +161,10 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2) this.mousePressed = true
         }
 
-        // canvas.ondblclick = () => {
-        //     this.termSignal = true
-        // }
-
         this.addEventListeners()
 
         this.drawGrowthCurve()
+        this.drawKernel()
 
         this.frameCounter = countFrames ? new FrameCounter() : undefined
 
@@ -310,6 +309,40 @@ class Lenia {
 
     }
 
+    private drawKernel = () => {
+        const canvas = document.getElementById('kernel-display') as HTMLCanvasElement
+
+        canvas.width = this.kernelParams.radius * 2
+        canvas.height = this.kernelParams.radius * 2
+
+        if (canvas) {
+            const ctx = canvas.getContext('2d')!!
+            const kernelPixels = this.kernelImage.toArray() as number[][][]
+            const reference = referenceXYZ.F12
+
+            const offset = this.size / 2 - this.kernelParams.radius
+
+            for (let x = 0; x < canvas.width; x++) {
+                for (let y = 0; y < canvas.height; y++) {
+                    const color = colorInterpolation(
+                        kernelPixels[y + offset][x + offset][0],
+                        0.5,
+                        RGBtoMSH([2, 16, 68], reference),
+                        RGBtoMSH([93, 6, 255], reference),
+                        RGBtoMSH([255, 255, 255], reference),
+                        reference
+                    )
+                    ctx.fillStyle = `rgb(
+                        ${Math.floor(color[0])},
+                        ${Math.floor(color[1])},
+                        ${Math.floor(color[2])}
+                    )`
+                    ctx.fillRect(x, y, 1, 1)
+                }
+            }
+        }
+    }
+
     private addEventListeners = () => {
 
         document.getElementById('growth-center')?.addEventListener('wheel', enableScrollWheel)
@@ -360,6 +393,23 @@ class Lenia {
     
     }
 
+    private regenerateKernel = () => {
+        this.kernelImage.delete()
+        this.kernelImage = this.generateKernel(
+            this.kernelParams.betas,
+            this.kernelParams.bRank,
+            this.kernelParams.coreWidth,
+            this.kernelParams.radius
+        ) as Texture
+
+        const normalizationFactor = this.findNormalization((this.kernelImage).toArray() as [][][])
+
+        this.kernel.delete()
+        this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor) as Texture)
+
+        this.drawKernel()
+    }
+
 }
 
 function enableScrollWheel(e: WheelEvent) {
@@ -376,4 +426,34 @@ function enableScrollWheel(e: WheelEvent) {
     e.target?.dispatchEvent(event)
 }
 
-export { Lenia }
+class KernelParams {
+
+    private _bRank: number
+
+    constructor(
+        private _betas: number[],
+        private _coreWidth: number,
+        private _radius: number
+    ) {
+        this._bRank = _betas.length - 1
+    }
+
+    public get betas() {
+        return this._betas
+    }
+
+    public get bRank() {
+        return this._bRank
+    }
+
+    public get coreWidth() {
+        return this._coreWidth
+    }
+
+    public get radius() {
+        return this._radius
+    }
+
+}
+
+export { Lenia, KernelParams }

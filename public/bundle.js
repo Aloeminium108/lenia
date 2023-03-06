@@ -31521,7 +31521,7 @@ module.exports = {
 },{"./input":156,"./texture":159,"acorn":7}],161:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ctx = exports.RGBtoMSH = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
+exports.ctx = exports.RGBtoMSH = exports.colorInterpolation = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('webgl2');
@@ -31766,10 +31766,10 @@ function createApplyGrowth(matrixSize) {
     return applyGrowth;
 }
 exports.createApplyGrowth = createApplyGrowth;
-function createRender(matrixSize, midPoint, minColor, maxColor, midColor, reference) {
+function createRender(matrixSize, midPoint, minColor, midColor, maxColor, reference) {
     const render = gpu.createKernel(function (matrix) {
         const point = matrix[this.thread.y][this.thread.x];
-        const color = colorInterpolation(point[0], this.constants.midPoint, this.constants.minColor, this.constants.maxColor, this.constants.midColor, this.constants.reference);
+        const color = colorInterpolation(point[0], this.constants.midPoint, this.constants.minColor, this.constants.midColor, this.constants.maxColor, this.constants.reference);
         this.color(color[0] / 255, color[1] / 255, color[2] / 255, 255);
     })
         .setOutput([matrixSize, matrixSize])
@@ -31856,7 +31856,7 @@ exports.createClear = createClear;
 // ----------------------------------------------
 // -------------- Inner functions ---------------
 // ----------------------------------------------
-function colorInterpolation(distance, midPoint, minColor, maxColor, midColor, reference) {
+function colorInterpolation(distance, midPoint, minColor, midColor, maxColor, reference) {
     let M1 = [0, 0, 0];
     let M2 = [0, 0, 0];
     let interp = distance;
@@ -31878,6 +31878,7 @@ function colorInterpolation(distance, midPoint, minColor, maxColor, midColor, re
     ];
     return MSHtoRGB(color, reference);
 }
+exports.colorInterpolation = colorInterpolation;
 function MSHtoRGB(color, reference) {
     return XYZtoRGB(LABtoXYZ(MSHtoLAB(color), reference));
 }
@@ -32061,7 +32062,7 @@ exports.FrameCounter = FrameCounter;
 },{}],163:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Lenia = void 0;
+exports.KernelParams = exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
 const fftpipeline_js_1 = require("./fftpipeline.js");
 //const ext = ctx.getExtension('GMAN_webgl_memory')
@@ -32088,11 +32089,12 @@ const referenceXYZ = {
     F12: [111.428, 100, 40.353],
 };
 class Lenia {
-    constructor(size, growthCenter, growthWidth, countFrames = false) {
+    constructor(size, growthCenter, growthWidth, kernelParams, countFrames = false) {
         var _a;
         this.size = size;
         this.growthCenter = growthCenter;
         this.growthWidth = growthWidth;
+        this.kernelParams = kernelParams;
         this.dt = 0.05;
         this.mousePressed = false;
         this.brushSize = 10;
@@ -32192,6 +32194,28 @@ class Lenia {
                 ctx.stroke();
             }
         };
+        this.drawKernel = () => {
+            const canvas = document.getElementById('kernel-display');
+            canvas.width = this.kernelParams.radius * 2;
+            canvas.height = this.kernelParams.radius * 2;
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const kernelPixels = this.kernelImage.toArray();
+                const reference = referenceXYZ.F12;
+                const offset = this.size / 2 - this.kernelParams.radius;
+                for (let x = 0; x < canvas.width; x++) {
+                    for (let y = 0; y < canvas.height; y++) {
+                        const color = (0, fftpipeline_js_1.colorInterpolation)(kernelPixels[y + offset][x + offset][0], 0.5, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
+                        ctx.fillStyle = `rgb(
+                        ${Math.floor(color[0])},
+                        ${Math.floor(color[1])},
+                        ${Math.floor(color[2])}
+                    )`;
+                        ctx.fillRect(x, y, 1, 1);
+                    }
+                }
+            }
+        };
         this.addEventListeners = () => {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('wheel', enableScrollWheel);
@@ -32230,6 +32254,13 @@ class Lenia {
             }
             return 1 / sum;
         };
+        this.regenerateKernel = () => {
+            this.kernelImage.delete();
+            this.kernelImage = this.generateKernel(this.kernelParams.betas, this.kernelParams.bRank, this.kernelParams.coreWidth, this.kernelParams.radius);
+            const normalizationFactor = this.findNormalization((this.kernelImage).toArray());
+            this.kernel.delete();
+            this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor));
+        };
         const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
         this.FFTPassVertical = FFTPassVertical;
         this.FFTPassHorizontal = FFTPassHorizontal;
@@ -32244,14 +32275,14 @@ class Lenia {
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
         this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
         const reference = referenceXYZ.F12;
-        this.render = (0, fftpipeline_js_1.createRender)(size, 0.1, (0, fftpipeline_js_1.RGBtoMSH)([6, 29, 113], reference), (0, fftpipeline_js_1.RGBtoMSH)([165, 0, 38], reference), (0, fftpipeline_js_1.RGBtoMSH)([253, 255, 194], reference), reference);
+        this.render = (0, fftpipeline_js_1.createRender)(size, 0.01, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
         this.draw = (0, fftpipeline_js_1.createDraw)(size);
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);
         this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
-        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 40);
-        const normalizationFactor = this.findNormalization(kernel.toArray());
-        this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
+        this.kernelImage = this.generateKernel(this.kernelParams.betas, this.kernelParams.bRank, this.kernelParams.coreWidth, this.kernelParams.radius);
+        const normalizationFactor = this.findNormalization((this.kernelImage).toArray());
+        this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor));
         this.lastFrame = this.randomize();
         document.addEventListener('contextmenu', event => event.preventDefault());
         const canvas = this.render.canvas;
@@ -32283,11 +32314,9 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2)
                 this.mousePressed = true;
         };
-        // canvas.ondblclick = () => {
-        //     this.termSignal = true
-        // }
         this.addEventListeners();
         this.drawGrowthCurve();
+        this.drawKernel();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }
@@ -32305,13 +32334,34 @@ function enableScrollWheel(e) {
     const event = new Event('input', { bubbles: true, cancelable: true });
     (_a = e.target) === null || _a === void 0 ? void 0 : _a.dispatchEvent(event);
 }
+class KernelParams {
+    constructor(_betas, _coreWidth, _radius) {
+        this._betas = _betas;
+        this._coreWidth = _coreWidth;
+        this._radius = _radius;
+        this._bRank = _betas.length - 1;
+    }
+    get betas() {
+        return this._betas;
+    }
+    get bRank() {
+        return this._bRank;
+    }
+    get coreWidth() {
+        return this._coreWidth;
+    }
+    get radius() {
+        return this._radius;
+    }
+}
+exports.KernelParams = KernelParams;
 
 },{"./fftpipeline.js":161,"./framecounter.js":162}],164:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lenia_js_1 = require("./lenia.js");
 const SPACE_SIZE = 512;
-const lenia = new lenia_js_1.Lenia(SPACE_SIZE, 0.15, 0.02, true);
+const lenia = new lenia_js_1.Lenia(SPACE_SIZE, 0.15, 0.02, new lenia_js_1.KernelParams([1.0, 0.7, 0.3], 4, 40), true);
 lenia.animate();
 
 },{"./lenia.js":163}]},{},[164]);

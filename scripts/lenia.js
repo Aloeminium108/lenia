@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Lenia = void 0;
+exports.KernelParams = exports.Lenia = void 0;
 const framecounter_js_1 = require("./framecounter.js");
 const fftpipeline_js_1 = require("./fftpipeline.js");
 //const ext = ctx.getExtension('GMAN_webgl_memory')
@@ -27,11 +27,12 @@ const referenceXYZ = {
     F12: [111.428, 100, 40.353],
 };
 class Lenia {
-    constructor(size, growthCenter, growthWidth, countFrames = false) {
+    constructor(size, growthCenter, growthWidth, kernelParams, countFrames = false) {
         var _a;
         this.size = size;
         this.growthCenter = growthCenter;
         this.growthWidth = growthWidth;
+        this.kernelParams = kernelParams;
         this.dt = 0.05;
         this.mousePressed = false;
         this.brushSize = 10;
@@ -131,6 +132,28 @@ class Lenia {
                 ctx.stroke();
             }
         };
+        this.drawKernel = () => {
+            const canvas = document.getElementById('kernel-display');
+            canvas.width = this.kernelParams.radius * 2;
+            canvas.height = this.kernelParams.radius * 2;
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const kernelPixels = this.kernelImage.toArray();
+                const reference = referenceXYZ.F12;
+                const offset = this.size / 2 - this.kernelParams.radius;
+                for (let x = 0; x < canvas.width; x++) {
+                    for (let y = 0; y < canvas.height; y++) {
+                        const color = (0, fftpipeline_js_1.colorInterpolation)(kernelPixels[y + offset][x + offset][0], 0.5, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
+                        ctx.fillStyle = `rgb(
+                        ${Math.floor(color[0])},
+                        ${Math.floor(color[1])},
+                        ${Math.floor(color[2])}
+                    )`;
+                        ctx.fillRect(x, y, 1, 1);
+                    }
+                }
+            }
+        };
         this.addEventListeners = () => {
             var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
             (_a = document.getElementById('growth-center')) === null || _a === void 0 ? void 0 : _a.addEventListener('wheel', enableScrollWheel);
@@ -169,6 +192,13 @@ class Lenia {
             }
             return 1 / sum;
         };
+        this.regenerateKernel = () => {
+            this.kernelImage.delete();
+            this.kernelImage = this.generateKernel(this.kernelParams.betas, this.kernelParams.bRank, this.kernelParams.coreWidth, this.kernelParams.radius);
+            const normalizationFactor = this.findNormalization((this.kernelImage).toArray());
+            this.kernel.delete();
+            this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor));
+        };
         const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
         this.FFTPassVertical = FFTPassVertical;
         this.FFTPassHorizontal = FFTPassHorizontal;
@@ -183,14 +213,14 @@ class Lenia {
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
         this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
         const reference = referenceXYZ.F12;
-        this.render = (0, fftpipeline_js_1.createRender)(size, 0.1, (0, fftpipeline_js_1.RGBtoMSH)([6, 29, 113], reference), (0, fftpipeline_js_1.RGBtoMSH)([165, 0, 38], reference), (0, fftpipeline_js_1.RGBtoMSH)([253, 255, 194], reference), reference);
+        this.render = (0, fftpipeline_js_1.createRender)(size, 0.01, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
         this.draw = (0, fftpipeline_js_1.createDraw)(size);
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);
         this.generateKernel = (0, fftpipeline_js_1.createGenerateKernel)(size);
-        const kernel = this.generateKernel([1.0, 0.7, 0.3], 2, 4, 40);
-        const normalizationFactor = this.findNormalization(kernel.toArray());
-        this.kernel = this.fft2d(this.matrixMul(kernel, normalizationFactor));
+        this.kernelImage = this.generateKernel(this.kernelParams.betas, this.kernelParams.bRank, this.kernelParams.coreWidth, this.kernelParams.radius);
+        const normalizationFactor = this.findNormalization((this.kernelImage).toArray());
+        this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor));
         this.lastFrame = this.randomize();
         document.addEventListener('contextmenu', event => event.preventDefault());
         const canvas = this.render.canvas;
@@ -222,11 +252,9 @@ class Lenia {
             if (e.buttons === 1 || e.buttons === 2)
                 this.mousePressed = true;
         };
-        // canvas.ondblclick = () => {
-        //     this.termSignal = true
-        // }
         this.addEventListeners();
         this.drawGrowthCurve();
+        this.drawKernel();
         this.frameCounter = countFrames ? new framecounter_js_1.FrameCounter() : undefined;
     }
 }
@@ -244,3 +272,24 @@ function enableScrollWheel(e) {
     const event = new Event('input', { bubbles: true, cancelable: true });
     (_a = e.target) === null || _a === void 0 ? void 0 : _a.dispatchEvent(event);
 }
+class KernelParams {
+    constructor(_betas, _coreWidth, _radius) {
+        this._betas = _betas;
+        this._coreWidth = _coreWidth;
+        this._radius = _radius;
+        this._bRank = _betas.length - 1;
+    }
+    get betas() {
+        return this._betas;
+    }
+    get bRank() {
+        return this._bRank;
+    }
+    get coreWidth() {
+        return this._coreWidth;
+    }
+    get radius() {
+        return this._radius;
+    }
+}
+exports.KernelParams = KernelParams;

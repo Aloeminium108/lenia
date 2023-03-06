@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ctx = exports.RGBtoMSH = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
+exports.ctx = exports.RGBtoMSH = exports.colorInterpolation = exports.growthFunction = exports.createClear = exports.createRandomize = exports.createGenerateKernel = exports.createDraw = exports.createRender = exports.createMatrixMul = exports.createPointwiseMul = exports.createPointwiseAdd = exports.createApplyGrowth = exports.createFFTPass = exports.createFFTShift = exports.createBitReverse = void 0;
 const index_js_1 = require("/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js");
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('webgl2');
@@ -245,10 +245,10 @@ function createApplyGrowth(matrixSize) {
     return applyGrowth;
 }
 exports.createApplyGrowth = createApplyGrowth;
-function createRender(matrixSize, midPoint, minColor, maxColor, midColor, reference) {
+function createRender(matrixSize, midPoint, minColor, midColor, maxColor, reference) {
     const render = gpu.createKernel(function (matrix) {
         const point = matrix[this.thread.y][this.thread.x];
-        const color = colorInterpolation(point[0], this.constants.midPoint, this.constants.minColor, this.constants.maxColor, this.constants.midColor, this.constants.reference);
+        const color = colorInterpolation(point[0], this.constants.midPoint, this.constants.minColor, this.constants.midColor, this.constants.maxColor, this.constants.reference);
         this.color(color[0] / 255, color[1] / 255, color[2] / 255, 255);
     })
         .setOutput([matrixSize, matrixSize])
@@ -335,7 +335,7 @@ exports.createClear = createClear;
 // ----------------------------------------------
 // -------------- Inner functions ---------------
 // ----------------------------------------------
-function colorInterpolation(distance, midPoint, minColor, maxColor, midColor, reference) {
+function colorInterpolation(distance, midPoint, minColor, midColor, maxColor, reference) {
     let M1 = [0, 0, 0];
     let M2 = [0, 0, 0];
     let interp = distance;
@@ -357,6 +357,7 @@ function colorInterpolation(distance, midPoint, minColor, maxColor, midColor, re
     ];
     return MSHtoRGB(color, reference);
 }
+exports.colorInterpolation = colorInterpolation;
 function MSHtoRGB(color, reference) {
     return XYZtoRGB(LABtoXYZ(MSHtoLAB(color), reference));
 }

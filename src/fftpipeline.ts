@@ -350,8 +350,8 @@ function createRender(
     matrixSize: number,
     midPoint: number,
     minColor: number[], 
-    maxColor: number[], 
     midColor: number[],
+    maxColor: number[], 
     reference: number[]
 ) {
 
@@ -363,8 +363,8 @@ function createRender(
             point[0],
             this.constants.midPoint as number,
             this.constants.minColor as number[],
-            this.constants.maxColor as number[],
             this.constants.midColor as number[],
+            this.constants.maxColor as number[],
             this.constants.reference as number[],
         )
         this.color(color[0]/255, color[1]/255, color[2]/255, 255)
@@ -488,8 +488,8 @@ function colorInterpolation(
     distance: number, 
     midPoint: number,
     minColor: number[], 
-    maxColor: number[], 
     midColor: number[],
+    maxColor: number[], 
     reference: number[]
 ) {
 
@@ -731,6 +731,7 @@ export {
     createRandomize,
     createClear,
     growthFunction,
+    colorInterpolation,
     RGBtoMSH,
     ctx
 }
