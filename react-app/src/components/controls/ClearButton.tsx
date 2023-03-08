@@ -1,4 +1,4 @@
-const React = require('react')
+import React from "react";
 
 function ClearButton () {
     return (
@@ -8,4 +8,4 @@ function ClearButton () {
     )
 }  
 
-module.exports = ClearButton
+export default ClearButton

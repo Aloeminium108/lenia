@@ -1,8 +1,8 @@
-const React = require('react')
+import React, { useState } from "react"
 
-function BetaSlider(key) {
+function BetaSlider(data: {key: number}) {
     return (
-        <div>
+        <div key={`beta-slider-${data.key}`}>
             <input 
                 type="range" 
                 className='beta-slider' 
@@ -16,11 +16,14 @@ function BetaSlider(key) {
 }
 
 function KernelControls() {
+
+    const [betaSliders, setBetaSliders] = useState([<BetaSlider key={0}/>])
+
     return (
         <div>
             <canvas id='kernel-display'></canvas>
             <div id='beta-sliders'>
-                <BetaSlider />
+                
             </div>
             <div>
                 <button id='add-beta' type='button'>+</button>
@@ -33,4 +36,4 @@ function KernelControls() {
     )
 }  
 
-module.exports = KernelControls
+export default KernelControls

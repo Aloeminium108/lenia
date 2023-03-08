@@ -1,4 +1,4 @@
-const React = require('react')
+import React from "react";
 
 function DeltaControls () {
     return (
@@ -11,4 +11,4 @@ function DeltaControls () {
     )
 }  
 
-module.exports = DeltaControls
+export default DeltaControls

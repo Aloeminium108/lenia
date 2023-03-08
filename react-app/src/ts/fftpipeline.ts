@@ -1,4 +1,4 @@
-import { GPU } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
+import { GPU } from 'gpu.js'
 
 const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('webgl2')!!
@@ -740,6 +740,9 @@ export {
     growthFunction,
     colorInterpolation,
     RGBtoMSH,
-    ColorParams,
     ctx
+}
+
+export type {
+    ColorParams
 }

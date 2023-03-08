@@ -1,6 +1,6 @@
-import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
-import { FrameCounter } from "./framecounter.js"
-import { colorInterpolation, ColorParams, createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction, RGBtoMSH } from './fftpipeline.js'
+import { IKernelRunShortcut, Texture } from 'gpu.js'
+import { FrameCounter } from "./framecounter"
+import { colorInterpolation, ColorParams, createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction, RGBtoMSH } from './fftpipeline'
 
 //const ext = ctx.getExtension('GMAN_webgl_memory')
 

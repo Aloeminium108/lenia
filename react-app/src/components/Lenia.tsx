@@ -1,6 +1,6 @@
-const React = require('react')
+import React from "react"
 
-function Lenia () {
+function LeniaContainer() {
     return (
         <>
             <div id='lenia-container'></div>
@@ -8,4 +8,4 @@ function Lenia () {
     )
 }  
 
-module.exports = Lenia
+export default LeniaContainer

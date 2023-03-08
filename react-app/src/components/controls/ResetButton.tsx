@@ -1,4 +1,4 @@
-const React = require('react')
+import React from "react";
 
 function ResetButton () {
     return (
@@ -8,4 +8,4 @@ function ResetButton () {
     )
 }  
 
-module.exports = ResetButton
+export default ResetButton

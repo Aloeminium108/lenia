@@ -1,4 +1,4 @@
-const React = require('react')
+import React from "react";
 
 function BrushSize () {
     return (
@@ -11,4 +11,4 @@ function BrushSize () {
     )
 }  
 
-module.exports = BrushSize
+export default BrushSize

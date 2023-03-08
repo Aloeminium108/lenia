@@ -1,4 +1,4 @@
-const React = require('react')
+import React from "react";
 
 function GrowthControls () {
     return (
@@ -16,4 +16,4 @@ function GrowthControls () {
     )
 }  
 
-module.exports = GrowthControls
+export default GrowthControls
