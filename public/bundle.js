@@ -31766,27 +31766,29 @@ function createApplyGrowth(matrixSize) {
     return applyGrowth;
 }
 exports.createApplyGrowth = createApplyGrowth;
-function createRender(matrixSize, midPoint, minColor, midColor, maxColor, reference) {
+function createRender(matrixSize, colorParams) {
     const render = gpu.createKernel(function (matrix) {
         const point = matrix[this.thread.y][this.thread.x];
-        const color = colorInterpolation(point[0], this.constants.midPoint, this.constants.minColor, this.constants.midColor, this.constants.maxColor, this.constants.reference);
+        const color = colorInterpolation(Math.pow(point[0], this.constants.exponent), this.constants.midPoint, this.constants.minColor, this.constants.midColor, this.constants.maxColor, this.constants.reference);
         this.color(color[0] / 255, color[1] / 255, color[2] / 255, 255);
     })
         .setOutput([matrixSize, matrixSize])
         .setGraphical(true)
         .setConstants({
-        midPoint: midPoint,
-        minColor: minColor,
-        maxColor: maxColor,
-        midColor: midColor,
-        reference: reference
+        midPoint: colorParams.midPoint,
+        minColor: colorParams.minColor,
+        maxColor: colorParams.maxColor,
+        midColor: colorParams.midColor,
+        reference: colorParams.reference,
+        exponent: colorParams.exponent
     })
         .setConstantTypes({
         midPoint: 'Float',
         minColor: 'Array(3)',
         maxColor: 'Array(3)',
         midColor: 'Array(3)',
-        reference: 'Array(3)'
+        reference: 'Array(3)',
+        exponent: 'Float'
     })
         .setArgumentTypes({ matrix: 'Array2D(2)' });
     return render;
@@ -32201,11 +32203,10 @@ class Lenia {
             if (canvas) {
                 const ctx = canvas.getContext('2d');
                 const kernelPixels = this.kernelImage.toArray();
-                const reference = referenceXYZ.F12;
                 const offset = this.size / 2 - this.kernelParams.radius;
                 for (let x = 0; x < canvas.width; x++) {
                     for (let y = 0; y < canvas.height; y++) {
-                        const color = (0, fftpipeline_js_1.colorInterpolation)(kernelPixels[y + offset][x + offset][0], 0.5, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
+                        const color = (0, fftpipeline_js_1.colorInterpolation)(Math.pow(kernelPixels[y + offset][x + offset][0], this.colorParams.exponent), this.colorParams.midPoint, this.colorParams.minColor, this.colorParams.midColor, this.colorParams.maxColor, this.colorParams.reference);
                         ctx.fillStyle = `rgb(
                         ${Math.floor(color[0])},
                         ${Math.floor(color[1])},
@@ -32260,6 +32261,7 @@ class Lenia {
             const normalizationFactor = this.findNormalization((this.kernelImage).toArray());
             this.kernel.delete();
             this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor));
+            this.drawKernel();
         };
         const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
         this.FFTPassVertical = FFTPassVertical;
@@ -32274,8 +32276,16 @@ class Lenia {
         this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
         this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
-        const reference = referenceXYZ.F12;
-        this.render = (0, fftpipeline_js_1.createRender)(size, 0.01, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
+        const reference = referenceXYZ.B;
+        this.colorParams = {
+            midPoint: 0.5,
+            minColor: (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference),
+            midColor: (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference),
+            maxColor: (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference),
+            reference: reference,
+            exponent: 1
+        };
+        this.render = (0, fftpipeline_js_1.createRender)(size, this.colorParams);
         this.draw = (0, fftpipeline_js_1.createDraw)(size);
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);

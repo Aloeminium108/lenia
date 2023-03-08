@@ -139,11 +139,10 @@ class Lenia {
             if (canvas) {
                 const ctx = canvas.getContext('2d');
                 const kernelPixels = this.kernelImage.toArray();
-                const reference = referenceXYZ.F12;
                 const offset = this.size / 2 - this.kernelParams.radius;
                 for (let x = 0; x < canvas.width; x++) {
                     for (let y = 0; y < canvas.height; y++) {
-                        const color = (0, fftpipeline_js_1.colorInterpolation)(kernelPixels[y + offset][x + offset][0], 0.5, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
+                        const color = (0, fftpipeline_js_1.colorInterpolation)(Math.pow(kernelPixels[y + offset][x + offset][0], this.colorParams.exponent), this.colorParams.midPoint, this.colorParams.minColor, this.colorParams.midColor, this.colorParams.maxColor, this.colorParams.reference);
                         ctx.fillStyle = `rgb(
                         ${Math.floor(color[0])},
                         ${Math.floor(color[1])},
@@ -198,6 +197,7 @@ class Lenia {
             const normalizationFactor = this.findNormalization((this.kernelImage).toArray());
             this.kernel.delete();
             this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor));
+            this.drawKernel();
         };
         const { FFTPassVertical, FFTPassHorizontal, invFFTPassVertical, invFFTPassHorizontal } = (0, fftpipeline_js_1.createFFTPass)(size);
         this.FFTPassVertical = FFTPassVertical;
@@ -212,8 +212,16 @@ class Lenia {
         this.pointwiseMul = (0, fftpipeline_js_1.createPointwiseMul)(size);
         this.matrixMul = (0, fftpipeline_js_1.createMatrixMul)(size);
         this.applyGrowth = (0, fftpipeline_js_1.createApplyGrowth)(size);
-        const reference = referenceXYZ.F12;
-        this.render = (0, fftpipeline_js_1.createRender)(size, 0.01, (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference), (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference), (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference), reference);
+        const reference = referenceXYZ.B;
+        this.colorParams = {
+            midPoint: 0.5,
+            minColor: (0, fftpipeline_js_1.RGBtoMSH)([2, 16, 68], reference),
+            midColor: (0, fftpipeline_js_1.RGBtoMSH)([93, 6, 255], reference),
+            maxColor: (0, fftpipeline_js_1.RGBtoMSH)([255, 255, 255], reference),
+            reference: reference,
+            exponent: 1
+        };
+        this.render = (0, fftpipeline_js_1.createRender)(size, this.colorParams);
         this.draw = (0, fftpipeline_js_1.createDraw)(size);
         this.randomize = (0, fftpipeline_js_1.createRandomize)(size);
         this.clear = (0, fftpipeline_js_1.createClear)(size);

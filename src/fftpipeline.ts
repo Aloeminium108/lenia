@@ -348,11 +348,7 @@ function createApplyGrowth(matrixSize: number) {
 
 function createRender(
     matrixSize: number,
-    midPoint: number,
-    minColor: number[], 
-    midColor: number[],
-    maxColor: number[], 
-    reference: number[]
+    colorParams: ColorParams
 ) {
 
     const render = gpu.createKernel(function (
@@ -360,7 +356,7 @@ function createRender(
     ) {
         const point = matrix[this.thread.y][this.thread.x]
         const color = colorInterpolation(
-            point[0],
+            point[0] ** (this.constants.exponent as number),
             this.constants.midPoint as number,
             this.constants.minColor as number[],
             this.constants.midColor as number[],
@@ -372,18 +368,20 @@ function createRender(
         .setOutput([matrixSize, matrixSize])
         .setGraphical(true)
         .setConstants({
-            midPoint: midPoint,
-            minColor: minColor, 
-            maxColor: maxColor, 
-            midColor: midColor,
-            reference: reference
+            midPoint: colorParams.midPoint,
+            minColor: colorParams.minColor, 
+            maxColor: colorParams.maxColor, 
+            midColor: colorParams.midColor,
+            reference: colorParams.reference,
+            exponent: colorParams.exponent
         })
         .setConstantTypes({
             midPoint: 'Float',
             minColor: 'Array(3)', 
             maxColor: 'Array(3)', 
             midColor: 'Array(3)',
-            reference: 'Array(3)'
+            reference: 'Array(3)',
+            exponent: 'Float'
         })
         .setArgumentTypes({ matrix: 'Array2D(2)' })
     
@@ -717,6 +715,15 @@ function eulerExp(x: number) {
     return [Math.cos(x), Math.sin(x)]
 }
 
+interface ColorParams {
+    midPoint: number
+    minColor: number[]
+    midColor: number[]
+    maxColor: number[]
+    reference: number[]
+    exponent: number
+}
+
 export { 
     createBitReverse, 
     createFFTShift,
@@ -733,5 +740,6 @@ export {
     growthFunction,
     colorInterpolation,
     RGBtoMSH,
+    ColorParams,
     ctx
 }

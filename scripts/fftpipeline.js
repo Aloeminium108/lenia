@@ -245,27 +245,29 @@ function createApplyGrowth(matrixSize) {
     return applyGrowth;
 }
 exports.createApplyGrowth = createApplyGrowth;
-function createRender(matrixSize, midPoint, minColor, midColor, maxColor, reference) {
+function createRender(matrixSize, colorParams) {
     const render = gpu.createKernel(function (matrix) {
         const point = matrix[this.thread.y][this.thread.x];
-        const color = colorInterpolation(point[0], this.constants.midPoint, this.constants.minColor, this.constants.midColor, this.constants.maxColor, this.constants.reference);
+        const color = colorInterpolation(Math.pow(point[0], this.constants.exponent), this.constants.midPoint, this.constants.minColor, this.constants.midColor, this.constants.maxColor, this.constants.reference);
         this.color(color[0] / 255, color[1] / 255, color[2] / 255, 255);
     })
         .setOutput([matrixSize, matrixSize])
         .setGraphical(true)
         .setConstants({
-        midPoint: midPoint,
-        minColor: minColor,
-        maxColor: maxColor,
-        midColor: midColor,
-        reference: reference
+        midPoint: colorParams.midPoint,
+        minColor: colorParams.minColor,
+        maxColor: colorParams.maxColor,
+        midColor: colorParams.midColor,
+        reference: colorParams.reference,
+        exponent: colorParams.exponent
     })
         .setConstantTypes({
         midPoint: 'Float',
         minColor: 'Array(3)',
         maxColor: 'Array(3)',
         midColor: 'Array(3)',
-        reference: 'Array(3)'
+        reference: 'Array(3)',
+        exponent: 'Float'
     })
         .setArgumentTypes({ matrix: 'Array2D(2)' });
     return render;

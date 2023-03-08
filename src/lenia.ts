@@ -1,6 +1,6 @@
 import { IKernelRunShortcut, KernelOutput, Texture } from '/home/alice/Documents/NCState/lenia/node_modules/gpu.js/src/index.js'
 import { FrameCounter } from "./framecounter.js"
-import { colorInterpolation, createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction, RGBtoMSH } from './fftpipeline.js'
+import { colorInterpolation, ColorParams, createApplyGrowth, createBitReverse, createClear, createDraw, createFFTPass, createFFTShift, createGenerateKernel, createMatrixMul, createPointwiseAdd, createPointwiseMul, createRandomize, createRender, ctx, growthFunction, RGBtoMSH } from './fftpipeline.js'
 
 //const ext = ctx.getExtension('GMAN_webgl_memory')
 
@@ -33,6 +33,8 @@ class Lenia {
 
     private kernel: Texture
     private kernelImage: Texture
+
+    private colorParams: ColorParams
 
     private dt: number = 0.05
 
@@ -93,16 +95,22 @@ class Lenia {
 
         this.applyGrowth = createApplyGrowth(size)
 
-        const reference = referenceXYZ.F12
+        const reference = referenceXYZ.B
+
+        this.colorParams = {
+            midPoint: 0.5,
+            minColor: RGBtoMSH([2, 16, 68], reference),
+            midColor: RGBtoMSH([93, 6, 255], reference),
+            maxColor: RGBtoMSH([255, 255, 255], reference),
+            reference: reference,
+            exponent: 1
+        }
 
         this.render = createRender(
             size,
-            0.01,
-            RGBtoMSH([2, 16, 68], reference),
-            RGBtoMSH([93, 6, 255], reference),
-            RGBtoMSH([255, 255, 255], reference),
-            reference
+            this.colorParams
         )
+
         this.draw = createDraw(size)
 
         this.randomize = createRandomize(size)
@@ -318,19 +326,18 @@ class Lenia {
         if (canvas) {
             const ctx = canvas.getContext('2d')!!
             const kernelPixels = this.kernelImage.toArray() as number[][][]
-            const reference = referenceXYZ.F12
 
             const offset = this.size / 2 - this.kernelParams.radius
 
             for (let x = 0; x < canvas.width; x++) {
                 for (let y = 0; y < canvas.height; y++) {
                     const color = colorInterpolation(
-                        kernelPixels[y + offset][x + offset][0],
-                        0.5,
-                        RGBtoMSH([2, 16, 68], reference),
-                        RGBtoMSH([93, 6, 255], reference),
-                        RGBtoMSH([255, 255, 255], reference),
-                        reference
+                        kernelPixels[y + offset][x + offset][0] ** this.colorParams.exponent,
+                        this.colorParams.midPoint,
+                        this.colorParams.minColor,
+                        this.colorParams.midColor,
+                        this.colorParams.maxColor,
+                        this.colorParams.reference
                     )
                     ctx.fillStyle = `rgb(
                         ${Math.floor(color[0])},
@@ -455,5 +462,7 @@ class KernelParams {
     }
 
 }
+
+
 
 export { Lenia, KernelParams }
