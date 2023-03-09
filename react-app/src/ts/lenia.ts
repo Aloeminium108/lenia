@@ -119,6 +119,7 @@ class Lenia {
 
         this.kernelImage = this.generateKernel(
             this.kernelParams.betas,
+            [0],
             this.kernelParams.bRank,
             this.kernelParams.coreWidth,
             this.kernelParams.radius
@@ -383,6 +384,17 @@ class Lenia {
             this.lastFrame.delete()
             this.lastFrame = this.clear() as Texture
         })
+
+        document.getElementById('generate-kernel')?.addEventListener('click', () => {
+            const sliders = document.querySelectorAll('.beta-slider') as NodeListOf<HTMLInputElement>
+            const betas: number[] = []
+            sliders.forEach(slider => {
+                betas.push(parseFloat(slider.value))
+            })
+
+            this.kernelParams.betas = betas
+            this.regenerateKernel()
+        })
         
     }
 
@@ -402,14 +414,22 @@ class Lenia {
 
     private regenerateKernel = () => {
         this.kernelImage.delete()
+        console.log(this.kernelParams.betas)
+        const betas1 = this.kernelParams.betas.slice(0, 4)
+        console.log(betas1)
+        let betas2 = this.kernelParams.betas.slice(4)
+        if (betas2.length < 1) {
+            betas2 = [0]
+        }
         this.kernelImage = this.generateKernel(
-            this.kernelParams.betas,
+            betas1,
+            betas2,
             this.kernelParams.bRank,
             this.kernelParams.coreWidth,
             this.kernelParams.radius
         ) as Texture
 
-        const normalizationFactor = this.findNormalization((this.kernelImage).toArray() as [][][])
+        const normalizationFactor = this.findNormalization(this.kernelImage.toArray() as [][][])
 
         this.kernel.delete()
         this.kernel = this.fft2d(this.matrixMul(this.kernelImage, normalizationFactor) as Texture)
@@ -442,11 +462,16 @@ class KernelParams {
         private _coreWidth: number,
         private _radius: number
     ) {
-        this._bRank = _betas.length - 1
+        this._bRank = _betas.length
     }
 
     public get betas() {
         return this._betas
+    }
+
+    public set betas(betas: number[]) {
+        this._betas = betas
+        this._bRank = betas.length
     }
 
     public get bRank() {

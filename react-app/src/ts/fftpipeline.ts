@@ -423,7 +423,8 @@ function createDraw(matrixSize: number) {
 function createGenerateKernel(matrixSize: number) {
 
     const generateKernel = gpu.createKernel(function (
-        betas: number[],
+        betas1: number[],
+        betas2: number[],
         b_rank: number,
         coreWidth: number, 
         radius: number
@@ -435,8 +436,11 @@ function createGenerateKernel(matrixSize: number) {
         const distance = Math.sqrt(dx ** 2 + dy ** 2) / radius
 
         if (distance < 1) {
-            const beta = betas[Math.floor(distance * b_rank)]
-            const output = beta * kernel_core((distance * (b_rank + 1)) % 1, coreWidth)
+            const index = Math.floor(distance * b_rank)
+            const beta = index < 4 ?
+                betas1[index] :
+                betas2[index - 4]
+            const output = beta * kernel_core((distance * b_rank) % 1, coreWidth)
             return [output, 0]
         } else {
             return [0, 0]
@@ -445,6 +449,7 @@ function createGenerateKernel(matrixSize: number) {
     })
         .setOutput([matrixSize, matrixSize])
         .setPipeline(true)
+        .setImmutable(true)
         .setConstants({ halfPoint: (matrixSize / 2) })
 
     return generateKernel
