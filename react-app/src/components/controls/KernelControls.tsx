@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 
-function BetaSlider(data: {key: number}) {
+function BetaSlider() {
     return (
-        <div key={`beta-slider-${data.key}`}>
+        <div>
             <input 
                 type="range" 
                 className='beta-slider' 
