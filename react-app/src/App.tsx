@@ -29,7 +29,7 @@ class App extends React.Component {
 
     render() {
         return (
-            <>
+            <div id='home'>
                 <div className='control-panel'>
                     <KernelControls />
                     <GrowthControls />
@@ -43,7 +43,7 @@ class App extends React.Component {
                     <ResetButton />
                     <ClearButton />
                 </div>
-            </>
+            </div>
         )
     }
 }

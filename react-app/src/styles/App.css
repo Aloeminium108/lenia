@@ -1,7 +1,7 @@
 body {
   
   margin: 0;
-
+  overflow: hidden;
   background-color: #16161dff;
 
   user-select: none;
@@ -10,9 +10,16 @@ body {
 #root {
   position: relative;
   display: flex;
-  overflow: hidden;
   flex-direction: row;
   justify-content: center;
+  width: 100%;
+}
+
+#home {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  width: 100%;
 }
 
 canvas {
