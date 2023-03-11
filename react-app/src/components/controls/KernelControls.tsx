@@ -47,10 +47,10 @@ function KernelControls() {
                     type="range" 
                     id="core-width"
                     name="core-width"
-                    min="0.5" 
-                    max="10" 
+                    min="1" 
+                    max="4" 
                     defaultValue="2" 
-                    step="0.5" 
+                    step="0.1" 
                 />
                 </div>
             <div>
