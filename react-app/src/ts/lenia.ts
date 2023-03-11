@@ -393,6 +393,10 @@ class Lenia {
             })
 
             this.kernelParams.betas = betas
+
+            const coreWidth = document.getElementById('core-width') as HTMLInputElement
+            this.kernelParams.coreWidth = parseFloat(coreWidth.value) ** 2
+
             this.regenerateKernel()
         })
         
@@ -414,13 +418,13 @@ class Lenia {
 
     private regenerateKernel = () => {
         this.kernelImage.delete()
-        console.log(this.kernelParams.betas)
+
         const betas1 = this.kernelParams.betas.slice(0, 4)
-        console.log(betas1)
         let betas2 = this.kernelParams.betas.slice(4)
         if (betas2.length < 1) {
             betas2 = [0]
         }
+
         this.kernelImage = this.generateKernel(
             betas1,
             betas2,
@@ -482,6 +486,10 @@ class KernelParams {
         return this._coreWidth
     }
 
+    public set coreWidth(coreWidth) {
+        this._coreWidth = coreWidth
+    }
+ 
     public get radius() {
         return this._radius
     }

@@ -42,6 +42,18 @@ function KernelControls() {
                 <button id='del-beta' type='button' onClick={delBetaSlider}>-</button>
             </div>
             <div>
+                <label htmlFor="core-width">Core Width</label>
+                <input 
+                    type="range" 
+                    id="core-width"
+                    name="core-width"
+                    min="0.5" 
+                    max="10" 
+                    defaultValue="2" 
+                    step="0.5" 
+                />
+                </div>
+            <div>
                 <button id='generate-kernel' type='button'>Generate Kernel</button>
             </div>
         </ div>
