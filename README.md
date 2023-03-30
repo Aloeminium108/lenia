@@ -5,7 +5,7 @@ Lenia is a continuous generalization of Conway's Game of Life first proposed and
 ## (Short) Formal Definition
 
 Lenia is defined by:
-- A scalar field, $A: \vec{x} \mapsto [0, 1]$, which is set in a Euclidean space, $L$
+- A scalar field, $A: L \mapsto [0, 1]$, where $L$ is a Euclidean space
 - A growth function, $G: [0, 1] \mapsto [-1, 1]$
 - And a convolution kernel, $K: N \mapsto S$ where $N$ is the neighborhood defined by the radius of the kernel, $r$: $N = \\{ \vec{x} \in L: \||\vec{x}\||_{2} \leq r \\}$ and $S$ is the set of all possible states of $A(\vec{x})$ (In this implementation of Lenia, $S$ is simply treated as the interval $[0, 1]$)
 
