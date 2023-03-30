@@ -15,7 +15,7 @@ Where $G^{t}$ is the result of the growth function $G$ being applied to the conv
 
 ### Or, in layman's terms
 
-Lenia is a type cellular automata that can be defined in a space of any dimension. Along with that space, there is a convolution kernel and a growth function. Each point in that space has some value between 0 and 1, and to get the value for any given point in space at a particular timestep, you apply the following procedure to the previous timestep:
+Lenia is a type of cellular automata that can be defined in a space of any dimension. Along with that space, there is a convolution kernel and a growth function. Each point in that space has some value between 0 and 1, and to get the value for any given point in space at a particular timestep, you apply the following procedure to the previous timestep:
 - Take the convolution of the space with the convolution kernel
 - Apply the growth function to the convolution
 - Add the result of the growth function back to the space, and clip the values between 0 and 1
