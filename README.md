@@ -34,7 +34,7 @@ Clicking and dragging the mouse over the canvas 'draws' on the scalar field. Dra
 
 The panel for kernel controls consists of an image of the current kernel, a set of sliders, and three buttons.
 
-Each slider controls the peak value of a ring in the kernel. Up to 8 rings can be added using the button labeled '+', and the outer ring can be removed using the button labeled '-' as long as there is are at least 2 rings.
+Each slider controls the peak value of a ring in the kernel. Up to 8 rings can be added using the button labeled '+', and the outer ring can be removed using the button labeled '-' as long as there are at least 2 rings.
 
 There is an additional slider, labeled 'Core Width', which controls the width of each of these rings.
 
