@@ -23,7 +23,7 @@ Lenia is a type of cellular automata that can be defined in a space of any dimen
 ## Controls
 
 On the left side of the screen there are two panels, one for generating the convolution kernel and one for controlling the growth function.
-On the right side of the screen there are sliders labeled 'delta-T' and 'brush size, and there are two buttons labeled 'reset' and 'clear'.
+On the right side of the screen there are sliders labeled 'delta-T' and 'Brush Size, and there are two buttons labeled 'reset' and 'clear'.
 In addition to these panels of controls, the canvas can be interacted with directly.
 
 ### Drawing
