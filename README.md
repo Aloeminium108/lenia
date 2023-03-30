@@ -143,7 +143,7 @@ With Rust, I am able to use existing packages with FFT implementations that are 
 
 ### GPU Acceleration
 
-There is not any Rust or WASM code in this repository, and that is because that solution was not satisfactory for me. The first issue is that the WASM API is incredibly tedious to work with, so the codebase became unmaintainable. The process for making the scalar field reset when the canvas is clicked in TypeScript would looke something like:
+There is not any Rust or WASM code in this repository, and that is because that solution was not satisfactory for me. The first issue is that the WASM API is incredibly tedious to work with, so the codebase became unmaintainable. The process for making the scalar field reset when the canvas is clicked in TypeScript would look something like:
 ```
 const reset = () => {
     // Set each value of the matrix to 0
