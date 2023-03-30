@@ -80,7 +80,7 @@ As with most optimization problems, there were many local minima that I encounte
 
 Since TypeScript does not have library for them, I first wrote a simple interface for complex numbers, equipped with methods for addition, multiplication, and exponentiation. I then used this to implement a basic Discrete Fourier Transform (DFT) algorithm. The formula for DFT is:
 $$X_{k} = \sum_{n=0}^{N-1} x_{n} * e^{ \frac{-i2 \pi k n}{N} }$$
-Where {x} is the signal in the time domain, {X} is that same signal in the frequency domain, and {N} is the number of samples within the signal. Stuart Riffle presents a great explanation for the intuition behind this formula:
+Where $x$ is the signal in the time domain, $X$ is that same signal in the frequency domain, and $N$ is the number of samples within the signal. Stuart Riffle presents a great explanation for the intuition behind this formula:
 
 ![To find the energy at a particular frequency, spin your signal around a circle at that frequency, and average a bunch of points along that path](https://web.archive.org/web/20120418231513im_/http://altdevblogaday.com/wp-content/uploads/2011/05/DerivedDFT.png)
 
