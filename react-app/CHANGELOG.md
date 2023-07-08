@@ -25,12 +25,12 @@
 - Fixed kernel generation
 - Fixed memory leak for real this time
 - Dealt with memory leak enough to bring back to 60fps (Still not 100% fixed)
-- Attempt #54903
+- Memory Leak Fix Attempt #54903
 - I am slowly going insane
-- Attempting once more with a friend's advice
+- Attempting to fix memory leak once more with a friend's advice
 - Still no success in fixing the memory leak
 - Pipelined draw function
-- Still failing to fix this
+- Still failing to fix this memory leak
 - Implemented GPU accelerated FFT (with major memory leaks)
 - Copied over functions for FFT pipeline
 - Added kernel display
