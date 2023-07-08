@@ -2,6 +2,8 @@
 
 Lenia is a continuous generalization of Conway's Game of Life first proposed and implemented by Bert Wang-Chak Chan (For more info please click [here](https://chakazul.github.io/lenia.html)). 
 
+**WARNING: THE VIDEOS PRESENTED HERE CONTAIN FLASHING IMAGERY. IF YOU HAVE PHOTOSENSITIVE EPILEPSY OR ANY OTHER CONDITION SUCH THAT FLASHING LIGHTS ARE HAZARDOUS FOR YOU, PROCEED WITH CAUTION. THE APPLICATION ITSELF MAY ALSO PRODUCE FLASHING IMAGERY. USE WITH CAUTION.**
+
 ## Description
 
 https://github.com/Aloeminium108/lenia/assets/86540464/d72d5807-db6a-4866-aec3-97e94591e8bc
