@@ -1,0 +1,60 @@
+
+- Update README.md
+- Replaced curly braces where necessary
+- Added clarifying comment about the Euclidean space that the scalar field is set in
+- Fixed slight error with mapping notation in the definition of the scalar field
+- Fixed typo in Layman's Terms section
+- Update README.md
+- Fixed Lenia formulae
+- Added basic definition of Lenia
+- Added README
+- Adjusted default values for core width slider
+- Added kernel core width slider
+- Fixed key is not a prop error
+- Adjusted styling
+- Added controls for kernel betas
+- Moved application into React
+- Created kernel controls jsx
+- Added kernel display
+- Tested out some parameters for the color scheme
+- Added diverging color scheme
+- Fixed issue with clearing/randomizing resulting in deleted texture errors
+- Merge branch 'fftshift' Made major optimization improvements using FFT convolution
+- Used FFT shifting to fix artifacts caused by convolution
+- Tested a few configurations for the kernel generation step
+- Fixed kernel generation
+- Fixed memory leak for real this time
+- Dealt with memory leak enough to bring back to 60fps (Still not 100% fixed)
+- Attempt #54903
+- I am slowly going insane
+- Attempting once more with a friend's advice
+- Still no success in fixing the memory leak
+- Pipelined draw function
+- Still failing to fix this
+- Implemented GPU accelerated FFT (with major memory leaks)
+- Copied over functions for FFT pipeline
+- Added kernel display
+- Added brush size controls
+- Added ability to adjust sliders with scroll wheel
+- Made growth curve display look smoother
+- Changed range slider event listeners from onchange to oninput
+- Disabled text highlighting and added mouseenter handling
+- Added clear button
+- Added brushes
+- Added scramble button
+- Changed delta slider to scale quadratically for finer control at lower values
+- Added delta slider
+- Changed lastFrame to a union type for easier manipulation between updates
+- Added controls for growth curve
+- Cleaned up deprecated functions
+- Optimized with pipelining
+- Slight adjustments to parameters
+- Implemented polynomial function shapes
+- Cleaned up code and created start of better growth function and kernel generation functions
+- Added GPU accelerated convolution
+- Tweaked parameters looking for distinct lifeforms
+- Got basic Lenia going
+- Added growth functions and kernel generation
+- Switched to more optimized draw function
+- Moved realToComplex to complex.ts and updated exports
+- First commit

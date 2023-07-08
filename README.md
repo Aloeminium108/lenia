@@ -2,7 +2,7 @@
 
 Lenia is a continuous generalization of Conway's Game of Life first proposed and implemented by Bert Wang-Chak Chan (For more info please click [here](https://chakazul.github.io/lenia.html)). 
 
-## (Short) Formal Definition
+## Description
 
 Lenia is defined by:
 - A scalar field, $A: L \mapsto [0, 1]$, where $L$ is a Euclidean space (This implementation uses a 2-dimensional Euclidean space, but Lenia can be implemented in any dimension)
@@ -15,22 +15,22 @@ Where $G^{t}$ is the result of the growth function $G$ being applied to the conv
 
 ### Or, in layman's terms
 
-Lenia is a type of cellular automata that can be defined in a space of any dimension. Along with that space, there is a convolution kernel and a growth function. Each point in that space has some value between 0 and 1, and to get the value for any given point in space at a particular timestep, you apply the following procedure to the previous timestep:
+Lenia is like Conway's Game of Life, but continuous. In Conway's Game of Life, each cell is either alive or dead. Whether a cell lives or dies is determined by the number of living adjacent cells in the previous timestep. Lenia allows for any number of states between alive and dead. Lenia is also continuous; instead of the blocky "cells" of Conway's GoL, the space that Lenia takes place in can be as smooth as desired. To get from one timestep to the next in Lenia, the following procedure is used:
 - Take the convolution of the space with the convolution kernel
 - Apply the growth function to the convolution
 - Add the result of the growth function back to the space, and clip the values between 0 and 1
 
-## Controls
+### Controls
 
 On the left side of the screen there are two panels, one for generating the convolution kernel and one for controlling the growth function.
 On the right side of the screen there are sliders labeled 'delta-T' and 'Brush Size, and there are two buttons labeled 'Reset' and 'Clear'.
 In addition to these panels of controls, the canvas can be interacted with directly.
 
-### Drawing
+#### Drawing
 
 Clicking and dragging the mouse over the canvas 'draws' on the scalar field. Drawing with the left mouse button sets all the values drawn over to 1, and drawing with the right mouse button sets all the values drawn over to 0. Essentially, the left button draws, and the right button erases.
 
-### Kernel Controls
+#### Kernel Controls
 
 The panel for kernel controls consists of an image of the current kernel, a set of sliders, and three buttons.
 
@@ -40,7 +40,7 @@ There is an additional slider, labeled 'Core Width', which controls the width of
 
 Adjusting these sliders does not affect the kernel itself until the 'Generate Kernel' button is clicked. This is because kernel generation is a somewhat expensive process, and doing so with every update of a slider would hinder performance.
 
-### Growth Function Controls
+#### Growth Function Controls
 
 The panel for growth function controls consists of an image of the graph of the growth function and two sliders. The domain of the graph is on the interval of $[0, 1]$, and its range is on the interval of $[-1, 1]$. The graph is stretched horizontally for better readability.
 
@@ -50,23 +50,45 @@ The second slider, labeled 'Width', controls how wide the bell is.
 
 The growth function is updated in real time as these sliders are moved.
 
-### Delta Controls
+#### Delta Controls
 
 The slider, labeled 'delta-T', controls the value of $\Delta t$. This slider ranges in value from 0 to 1. When set to 0, the simulation slows to a complete stop. When set to 1, the simulation runs at its maximum timestep size, which is generally too fast to be practically useful. Different combinations of kernel parameters and growth functions may result in faster or slower evolutions within the scalar field. It should also be noted that different time resolutions may affect the behavior of the simulation in unexpected ways. 
 
 The value of $\Delta t$ is updated in real time as this slider is moved.
 
-### Brush Size
+#### Brush Size
 
 The slider, labeled 'Brush Size', controls the radius around the mouse that is affected when drawing.
 
-### Reset
+#### Reset
 
 The button, labeled 'Reset', sets all points in the scalar field to a random value between 0 and 1.
 
-### Clear
+#### Clear
 
 The button, labeled 'Clear', sets all points in the scalar field to 0.
+
+
+## Technologies
+
+This application was built entirely in TypeScript with React and GPU.js
+
+## Technical Information
+
+As a React app, the only setup required to run on your own machine is:
+1. Clone the repository
+2. `cd` into the `react-app` directory
+3. Run `npm i` to install the necessary dependencies (Note that you may not be able to install GPU.js with versions of Node past 16.20.1)
+4. `npm start` to serve the app on the default port (Usually 3000)
+
+Also note that while the app will run without a CPU, a dedicated GPU is necessary for optimal performance. Your web browser must support and allow for GPU access (Firefox and Chrome do by default).
+
+## Issues
+
+- Currently this implementation only supports single-channel Lenia. Multi-channel Lenia is planned for a future version
+- Limited styling
+- Limited configuration options
+- Messy React code in need of refactoring
 
 ## Optimization
 
