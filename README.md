@@ -4,7 +4,7 @@ Lenia is a continuous generalization of Conway's Game of Life first proposed and
 
 ## Description
 
-https://github.com/Aloeminium108/lenia/assets/86540464/12744abb-dd0b-4edb-84ac-6c4dbd4b3f66
+https://github.com/Aloeminium108/lenia/assets/86540464/d72d5807-db6a-4866-aec3-97e94591e8bc
 
 Lenia is defined by:
 - A scalar field, $A: L \mapsto [0, 1]$, where $L$ is a Euclidean space (This implementation uses a 2-dimensional Euclidean space, but Lenia can be implemented in any dimension)
@@ -14,6 +14,8 @@ Lenia is defined by:
 The formula for calculating the state of $A(\vec{x})$ after a timestep $\Delta t$ is:
 $A^{t+\Delta t}(\vec{x}) = {clip}(A^{t}(\vec{x}) + \Delta t G^t(\vec{x}) , 0, 1)$
 Where $G^{t}$ is the result of the growth function $G$ being applied to the convolution of $K$ and $A^{t}$
+
+https://github.com/Aloeminium108/lenia/assets/86540464/12744abb-dd0b-4edb-84ac-6c4dbd4b3f66
 
 ### Or, in layman's terms
 
