@@ -4,6 +4,8 @@ Lenia is a continuous generalization of Conway's Game of Life first proposed and
 
 ## Description
 
+https://github.com/Aloeminium108/lenia/assets/86540464/12744abb-dd0b-4edb-84ac-6c4dbd4b3f66
+
 Lenia is defined by:
 - A scalar field, $A: L \mapsto [0, 1]$, where $L$ is a Euclidean space (This implementation uses a 2-dimensional Euclidean space, but Lenia can be implemented in any dimension)
 - A growth function, $G: [0, 1] \mapsto [-1, 1]$
@@ -19,6 +21,8 @@ Lenia is like Conway's Game of Life, but continuous. In Conway's Game of Life, e
 - Take the convolution of the space with the convolution kernel
 - Apply the growth function to the convolution
 - Add the result of the growth function back to the space, and clip the values between 0 and 1
+
+https://github.com/Aloeminium108/lenia/assets/86540464/200cae80-82c1-4dee-9e03-b2ffad9a15bc
 
 ### Controls
 
@@ -39,6 +43,8 @@ Each slider controls the peak value of a ring in the kernel. Up to 8 rings can b
 There is an additional slider, labeled 'Core Width', which controls the width of each of these rings.
 
 Adjusting these sliders does not affect the kernel itself until the 'Generate Kernel' button is clicked. This is because kernel generation is a somewhat expensive process, and doing so with every update of a slider would hinder performance.
+
+https://github.com/Aloeminium108/lenia/assets/86540464/99b50cfa-9a29-415e-aba8-38e1272f3566
 
 #### Growth Function Controls
 
