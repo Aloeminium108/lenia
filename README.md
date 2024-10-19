@@ -2,6 +2,18 @@
 
 Lenia is a continuous generalization of Conway's Game of Life first proposed and implemented by Bert Wang-Chak Chan (For more info please click [here](https://chakazul.github.io/lenia.html)). 
 
+## Setup
+
+To get the server running locally, follow these steps:
+
+`git clone https://github.com/Aloeminium108/lenia`
+
+`cd lenia/react-app/`
+
+`npm install`
+
+`npm start`
+
 ## (Short) Formal Definition
 
 Lenia is defined by:
